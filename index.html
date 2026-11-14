@@ -259,7 +259,7 @@
 <label class="gap">Vorgehen des Trupps<select id="walkChoice">
 <option value="">Vorgehen auswählen</option>
 <option value="fire">Brandverdacht melden und weitere Maßnahmen abstimmen</option>
-<option value="false">Täuschungsalarm melden und Rückstellung anfragen</option>
+<option value="false">Fehlauslösung melden und Rückstellung anfragen</option>
 <option value="investigate">Weitere Erkundung und Unterstützung anfordern</option>
 </select></label>
 <button id="walkSend">Entscheidung melden</button>
@@ -302,7 +302,7 @@
 </section>
 <section id="assessment" class="panel gap" hidden>
 <h2>Lagebeurteilung</h2><p id="findings" class="compact"></p>
-<label class="gap"><span class="label">Rückmeldung wählen</span><select id="answer"><option value="">Lage beurteilen</option><option value="fire">Brand bestätigt</option><option value="false">Täuschungsalarm · kein Brand festgestellt</option></select></label>
+<label class="gap"><span class="label">Rückmeldung wählen</span><select id="answer"><option value="">Lage beurteilen</option><option value="fire">Brand bestätigt</option><option value="false">Fehlauslösung · kein Brand festgestellt</option></select></label>
 <button class="action" id="submit">Rückmeldung abgeben</button>
 <p id="answerFeedback" class="feedback compact" role="status"></p>
 </section>
@@ -1552,7 +1552,7 @@ async function setupCloud() {
 }
 const decisions = {
   fire:'Brandverdacht melden und weitere Maßnahmen abstimmen',
-  false:'Täuschungsalarm melden und Rückstellung anfragen',
+  false:'Fehlauslösung melden und Rückstellung anfragen',
   investigate:'Weitere Erkundung und Unterstützung anfordern'
 };
 const readyForRelease = room => room.alarms.length > 0 && !room.active.length &&
