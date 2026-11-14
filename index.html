@@ -35,6 +35,18 @@
 .callpoint:hover:not(:disabled){background:#bb3132}.callpoint[aria-pressed=true]{opacity:1;border-color:#ff776f}
 .call-glass{background:#e7dfcd;color:#382421;width:min(100%,80px);height:45px;line-height:45px;border:2px solid #582727;border-radius:3px}
 .callpoint[aria-pressed=true] .call-glass{background:#ffc5ad;color:#8b1620}
+
+.call-station{display:grid;justify-items:center;align-content:start;gap:4px;text-align:center;font-size:13px}
+.call-station .callpoint{padding:0;width:min(100%,112px);aspect-ratio:1;border:0;background:none}
+.call-front{position:relative;display:grid;place-items:center;width:100%;height:100%;padding:12%;color:#fff5e7;background:linear-gradient(145deg,#b92427,#98191c);border-radius:6px;border:4px solid #74151a;box-shadow:inset 0 0 0 1px #f1696070,0 5px 0 #541419,0 8px 10px #0006}
+.call-emblem{position:absolute;left:10%;top:7%;width:23%;height:24%}
+.call-led{position:absolute;right:12%;top:14%;width:6px;height:6px;background:#541315;border-radius:50%;border:1px solid #791619}
+.call-lock{position:absolute;bottom:6%;left:45%;width:10%;height:4px;background:#571318;border-radius:2px}
+.call-station .call-glass{position:relative;display:grid;place-items:center;width:100%;height:64%;margin-top:17%;background:#f4f2e8;border:2px solid #671218;color:#1b1714;border-radius:2px;box-shadow:inset 0 2px 5px #0003;overflow:hidden}
+.call-glass svg{width:100%;height:100%}.call-trip{display:none;position:absolute;right:0;bottom:0;width:32%;height:25%;background:repeating-linear-gradient(45deg,#f3d034 0 5px,#24221b 5px 10px)}
+.callpoint[aria-pressed=true] .call-trip{display:block}.callpoint[aria-pressed=true] .call-led{background:#ffb2a6;box-shadow:0 0 6px 2px #ff4e37}.call-station .callpoint:hover:not(:disabled){background:none;filter:brightness(1.16)}
+.card-tabs{display:flex;gap:6px;flex-wrap:wrap}.card-tabs button[aria-pressed=true]{background:#f9bd65;color:#21180b;border-color:#f9bd65}
+.laufkarte{background:#faf9f3;color:#1e2522;border:1px solid #b9b6a9;border-radius:7px;overflow:hidden}.card-head{display:flex;align-items:start;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid #b6beb5;font-size:13px}.card-head p{font-size:11px;margin-top:2px}.card-head span{font-weight:800;padding:4px 7px;background:#f4d260;border:1px solid #4b4230;border-radius:3px}.card-head span.manual{background:#f68c7c}.card-map{overflow-x:auto}.card-map svg{width:100%;min-width:375px;display:block;height:auto}.card-key{font-size:11px;padding:7px 10px;border-top:1px solid #b6beb5}
 </style>
 </head>
 <body>
@@ -45,7 +57,7 @@
 <button id="modeFree" aria-pressed="false">Freie Bedienung</button>
 </nav>
 <section id="guidedToolbar" class="panel toolbar row" aria-label="Übungsauswahl">
-<label><span class="label">Übungslage</span><select id="scenario"><option>01 · Pflegezentrum</option><option>02 · Verwaltungsgebäude</option><option>03 · Logistikhalle</option></select></label>
+<label><span class="label">Übungslage</span><select id="scenario"><option>01 · Pflegezentrum</option><option>02 · Verwaltungsgebäude</option><option>03 · Logistikhalle</option><option>04 · Hotel am Park</option><option>05 · Gesamtschule</option><option>06 · Tiefgarage</option></select></label>
 <button id="start" class="action">Übung starten</button><button id="restart" disabled>Neu starten</button>
 </section>
 <section class="panel audio-panel" aria-label="Tonquellen">
@@ -107,11 +119,31 @@
 <section class="panel gap">
 <div class="row"><h2>Handdruckmelder</h2><span class="label">Übungsanlage</span></div>
 <div class="callpoints">
-<button id="callA" class="callpoint" aria-pressed="false"><strong>Feuer</strong><span class="call-glass">●</span><span>EG · Haupteingang</span></button>
-<button id="callB" class="callpoint" aria-pressed="false"><strong>Feuer</strong><span class="call-glass">●</span><span>1. OG · Treppenraum</span></button>
+<div class="call-station">
+<button id="callA" class="callpoint" aria-label="Handfeuermelder EG · Haupteingang auslösen" aria-pressed="false">
+<span class="call-front" aria-hidden="true">
+<svg class="call-emblem" viewBox="0 0 32 30"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<span class="call-led"></span>
+<span class="call-glass"><svg viewBox="0 0 90 44"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="7" fill="currentColor"/></svg><span class="call-trip"></span></span>
+<span class="call-lock"></span>
+</span>
+</button>
+<span>EG · Haupteingang</span><small class="muted">041/01</small>
+</div>
+<div class="call-station">
+<button id="callB" class="callpoint" aria-label="Handfeuermelder 1. OG · Treppenraum auslösen" aria-pressed="false">
+<span class="call-front" aria-hidden="true">
+<svg class="call-emblem" viewBox="0 0 32 30"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<span class="call-led"></span>
+<span class="call-glass"><svg viewBox="0 0 90 44"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="7" fill="currentColor"/></svg><span class="call-trip"></span></span>
+<span class="call-lock"></span>
+</span>
+</button>
+<span>1. OG · Treppenraum</span><small class="muted">042/01</small>
+</div>
 </div>
 <button id="restoreCalls" disabled>Handdruckmelder zurücksetzen</button>
-<p class="muted compact">Nach dem Zurücksetzen der Handdruckmelder löscht „BMZ rückstellen“ die gespeicherten Brandmeldungen.</p>
+<p class="muted compact">Auf das weiße Feld drücken, um den Melder direkt auszulösen. Nach dem Zurücksetzen der Handdruckmelder löscht „BMZ rückstellen“ die gespeicherten Brandmeldungen.</p>
 </section>
 <section class="panel gap"><h2>FAT prüfen</h2>
 <button id="toggleFault" aria-pressed="false">Störung simulieren</button>
@@ -123,7 +155,14 @@
 <div class="row"><h2>Erkundung</h2><span class="label" id="progress">0 / 0 erkundet</span></div>
 <p class="muted compact" id="brief">Lies die Meldung am FAT, wähle die passende Laufkarte und erkunde den Melderbereich.</p>
 <label class="gap"><span class="label">Feuerwehr-Laufkarte</span><select id="cards" disabled><option value="">Gruppe auswählen</option></select></label>
-<div id="mapArea" class="gap" hidden><p class="compact" id="mapTitle"></p><div class="plan" id="map"></div></div>
+<div id="mapArea" class="gap" hidden>
+<div class="card-tabs" aria-label="Laufkartenseite"><button id="cardFront" aria-pressed="true">Vorderseite</button><button id="cardBack" aria-pressed="false">Rückseite</button></div>
+<div class="laufkarte">
+<div class="card-head"><div><strong id="mapTitle"></strong><p id="cardMeta"></p></div><span id="cardGroup"></span></div>
+<div id="map" class="card-map"></div>
+<div class="card-key" id="cardLegend"></div>
+</div>
+</div>
 <button id="inspect" disabled>Laufkarte folgen und erkunden</button>
 <p id="fieldFeedback" class="feedback compact" role="status"></p>
 </section>
@@ -137,7 +176,7 @@
 <section id="result" class="panel gap score" aria-live="polite" hidden><h2>Übung abgeschlossen</h2><p id="summary"></p></section>
 </div>
 </div>
-<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und schematische Laufkarten. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. FAT-Summer und Gebäudealarm werden getrennt gesteuert. Die Tonquellen findest du unter „Tonquellen“. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p></details></footer>
+<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und zweiseitige Übungslaufkarten nach dem Aufbau des Wetteraukreiser Merkblatts. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. FAT-Summer und Gebäudealarm werden getrennt gesteuert. Die Tonquellen findest du unter „Tonquellen“. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p><p><a href="https://wetteraukreis.de/fileadmin/2_Service/sicherheit_ordnung_auslaender/Merkblatt_Feuerwehrlaufkarten.pdf">Gestaltungsvorlage · Merkblatt Feuerwehrlaufkarten des Wetteraukreises</a></p></details></footer>
 </main>
 <script>
 'use strict';
@@ -146,13 +185,13 @@ const scenarios = [
   {
     brief:'Haus A · Pflegezentrum. Die Anlage meldet einen einzelnen automatischen Melder.',
     alarms:[{group:'012',number:'03',type:'Rauchmelder',floor:'1. OG',room:'Teeküche',finding:'Wasserdampf aus einem geöffneten Geschirrspüler. Der erkundete Bereich zeigt keine Brandanzeichen.'}],
-    distractor:{group:'014',floor:'EG',room:'Speisesaal'}, verdict:'false',
+    distractor:{group:'014',number:'01',type:'Rauchmelder',floor:'EG',room:'Speisesaal'}, verdict:'false',
     release:'Die Dampfentwicklung ist beendet. In der Übung ist der Melderbereich geprüft und die Rückstellung kann freigegeben werden.'
   },
   {
     brief:'Haus B · Verwaltung. Lies am FAT ab, welcher Bereich gemeldet wird.',
     alarms:[{group:'023',number:'01',type:'Handfeuermelder',floor:'EG',room:'Treppenraum',finding:'Der Handfeuermelder wurde durch Mitarbeitende betätigt. Aus dem angrenzenden Kopierraum dringt Rauch. Ein brennender Papierkorb wird bestätigt.'}],
-    distractor:{group:'022',floor:'2. OG',room:'Besprechung'}, verdict:'fire',
+    distractor:{group:'022',number:'02',type:'Rauchmelder',floor:'2. OG',room:'Besprechung'}, verdict:'fire',
     release:'Der weitere Einsatz wird übersprungen. Die Übungsleitung simuliert, dass der Brand gelöscht und die Auslöseursache behoben wurde.'
   },
   {
@@ -161,8 +200,29 @@ const scenarios = [
       {group:'031',number:'02',type:'Rauchmelder',floor:'EG',room:'Verpackung',finding:'Rauchentwicklung an einer Verpackungsmaschine. Brennendes Material wird bestätigt.'},
       {group:'032',number:'04',type:'Rauchmelder',floor:'EG',room:'Versand',finding:'Rauch ist aus der Verpackung in den Versand gezogen. Dort wird kein weiterer Brandherd festgestellt.'}
     ],
-    distractor:{group:'034',floor:'1. OG',room:'Sozialraum'}, verdict:'fire',
+    distractor:{group:'034',number:'01',type:'Rauchmelder',floor:'1. OG',room:'Sozialraum'}, verdict:'fire',
     release:'Der weitere Einsatz wird übersprungen. Brandbekämpfung und Kontrolle beider Bereiche sind in der Übung abgeschlossen.'
+  },
+  {
+    brief:'Hotel am Park · Nachtbetrieb. Am FAT steht eine Brandmeldung aus einem Gästezimmer an.',
+    alarms:[{group:'051',number:'02',type:'Rauchmelder',floor:'2. OG',room:'Zimmer 214',finding:'Eine Bettdecke glimmt auf dem Boden. Im Zimmer ist Rauch wahrnehmbar. Hotelpersonal meldet, dass das Zimmer geräumt wurde.'}],
+    distractor:{group:'052',number:'01',type:'Rauchmelder',floor:'EG',room:'Frühstücksraum'}, verdict:'fire',
+    release:'Die Übungsleitung simuliert, dass das Glutnest abgelöscht und das Zimmer kontrolliert wurde.'
+  },
+  {
+    brief:'Gesamtschule · Umbau im Erdgeschoss. Die Ursache der Meldung ist anfangs unbekannt.',
+    alarms:[{group:'061',number:'03',type:'Rauchmelder',floor:'EG',room:'Werkraum',finding:'Beim Schleifen entstand Staub. Die Arbeiten sind gestoppt. Bei der Erkundung gibt es keine Brandanzeichen.'}],
+    distractor:{group:'062',number:'01',type:'Handfeuermelder',floor:'EG',room:'Pausenhalle'}, verdict:'false',
+    release:'Der Bereich bleibt staubfrei. Die Übungsleitung gibt die Rückstellung nach der simulierten Kontrolle frei.'
+  },
+  {
+    brief:'Tiefgarage · Ein automatischer und ein manueller Melder sind im FAT gespeichert.',
+    alarms:[
+      {group:'071',number:'05',type:'Rauchmelder',floor:'1. UG',room:'Parkdeck West',finding:'Aus dem Motorraum eines Pkw tritt dichter Rauch. Flammen am Fahrzeug werden bestätigt.'},
+      {group:'072',number:'01',type:'Handfeuermelder',floor:'1. UG',room:'Schleuse Ost',finding:'Eine Person hat den Handfeuermelder auf dem Weg zum Treppenraum betätigt. In der Schleuse ist kein weiterer Brandherd feststellbar.'}
+    ],
+    distractor:{group:'073',number:'02',type:'Rauchmelder',floor:'EG',room:'Kassenraum'}, verdict:'fire',
+    release:'Der weitere Einsatz wird übersprungen. Die Übungsleitung simuliert die Brandbekämpfung und die Kontrolle des Parkdecks.'
   }
 ];
 
@@ -379,22 +439,102 @@ function render() {
   if (s && !free) $('progress').textContent = s.inspected.size + ' / ' + s.data.alarms.length + ' erkundet';
 }
 
+const floorPlans = [
+  {name:'Pflegezentrum Lindenhof', breaks:[174,316], floors:{
+    EG:['Empfang','Speisesaal','Küche','Büro','Sitzbereich','Personal'],
+    '1. OG':['Pflegestützpunkt','Teeküche','Zimmer 108','Zimmer 104','Aufenthalt','Wäsche']}},
+  {name:'Verwaltung am Mühlweg', breaks:[165,308], floors:{
+    EG:['Bürgerbüro','Kopierraum','Archiv','Empfang','Technik','Treppenraum'],
+    '2. OG':['Büro 201','Besprechung','Büro 203','Archiv','IT','Personal']}},
+  {name:'Logistikzentrum Ried', breaks:[158,346], floors:{
+    EG:['Warenannahme','Verpackung','Versand','Büro','Lager','Retouren'],
+    '1. OG':['Disposition','Material','Technik','Umkleide','Sozialraum','Lager']}},
+  {name:'Hotel am Park', breaks:[200,325], floors:{
+    EG:['Rezeption','Frühstücksraum','Küche','Gepäck','Lobby','Personal'],
+    '2. OG':['Zimmer 212','Zimmer 214','Zimmer 216','Zimmer 211','Zimmer 213','Wäsche']}},
+  {name:'Gesamtschule An der Aue', breaks:[150,278], floors:{
+    EG:['Pausenhalle','Werkraum','Maschinenraum','Sekretariat','Klasse 01','Material']}},
+  {name:'Tiefgarage Am Stadtgarten', breaks:[225,368], floors:{
+    EG:['Kassenraum','Eingangshalle','Zufahrt','Technik','Abstellraum','Ausgang'],
+    '1. UG':['Parkdeck West','Parkdeck Mitte','Rampe','Lüftung','Parkdeck Ost','Schleuse Ost']}}
+];
+let cardSide = 'front';
+for (const [id,side] of [['cardFront','front'],['cardBack','back']]) {
+  $(id).onclick = () => {
+    cardSide = side;
+    drawCard();
+  };
+}
+
 function drawCard() {
-  const card = exercise?.cards.find(item => item.group === $('cards').value);
+  const card = exercise?.cards?.find(item => item.group === $('cards').value);
   $('mapArea').hidden = !card;
   if (!card) return;
-  $('mapTitle').textContent = 'Gruppe ' + card.group + ' · ' + card.floor + ' · ' + card.room;
-  const cells = [
-    ['Nebenraum',''],[card.room,'target'],['Technik',''],
-    ['→ Flur → Abzweig zum Zielraum','route'],
-    ['Zugang / FAT','entry'],['Treppe',''],['Nebenraum','']
-  ];
-  $('map').replaceChildren(...cells.map(([label, style]) => {
-    const cell = document.createElement('div');
-    cell.className = 'room ' + style;
-    cell.textContent = label;
-    return cell;
-  }));
+  const site = floorPlans[exercise.scenario];
+  const back = cardSide === 'back';
+  const manual = card.type === 'Handfeuermelder';
+  const floor = back ? card.floor : 'EG';
+  const changesFloor = card.floor !== 'EG';
+  const rooms = site.floors[floor];
+  const bounds = [80,...site.breaks,465];
+  const target = back || !changesFloor ? rooms.indexOf(card.room) : -1;
+  const roomCenter = index => (bounds[index % 3] + bounds[index % 3 + 1]) / 2;
+  const isUpper = target < 3;
+
+  $('cardFront').setAttribute('aria-pressed',String(!back));
+  $('cardBack').setAttribute('aria-pressed',String(back));
+  $('mapTitle').textContent = site.name + ' · ' + (back ? 'Detailplan' : 'Gebäudeübersicht');
+  $('cardMeta').textContent = card.floor + ' · ' + card.room + ' · ' +
+    (manual ? 'Handfeuermelder' : 'Automatischer Rauchmelder');
+  $('cardGroup').textContent = 'MG ' + card.group;
+  $('cardGroup').className = manual ? 'manual' : '';
+  $('cardLegend').textContent = back ?
+    'Grün: Laufweg · ' + (manual ? 'Quadrat: Handfeuermelder' : 'Kreis: Rauchmelder') +
+      (changesFloor ? ' · TR 1: Treppenraum' : ' · FIZ: Feuerwehr-Informationszentrale') :
+    'Grün: Laufweg · FIZ: Feuerwehr-Informationszentrale · FSD: Feuerwehr-Schlüsseldepot';
+
+  const startX = changesFloor && back ? 55 : 75;
+  const targetX = target < 0 ? 55 : roomCenter(target);
+  const detectorY = isUpper ? 87 : 189;
+  const route = target < 0
+    ? 'M75 248 V139 H55 V95'
+    : 'M' + startX + ' ' + (changesFloor && back ? '100 V139' : '248 V139') +
+      ' H' + targetX + ' V' + (back ? (isUpper ? 97 : 179) : (isUpper ? 112 : 166));
+  const roomMarkup = rooms.map((room,index) => {
+    const left = bounds[index % 3];
+    const right = bounds[index % 3 + 1];
+    const top = index < 3;
+    const y = top ? 45 : 160;
+    const center = roomCenter(index);
+    const hinge = center - 9;
+    const doorY = top ? 116 : 160;
+    return `<rect x="${left}" y="${y}" width="${right-left}" height="71" fill="${index === target && back ? '#fff1c7' : '#f8f7ef'}" stroke="#303531" stroke-width="2"/>
+      <path d="M${hinge} ${doorY}h18" stroke="#f8f7ef" stroke-width="4"/>
+      <path d="M${hinge} ${doorY}v${top ? -18 : 18}a18 18 0 0 ${top ? 1 : 0} 18 ${top ? 18 : -18}" fill="none" stroke="#63685b"/>
+      <text x="${center}" y="${top ? 65 : 217}" text-anchor="middle">${room}</text>`;
+  }).join('');
+  const detector = target >= 0 && back ? `<g transform="translate(${targetX} ${detectorY})">
+    ${manual ? '<rect x="-7" y="-7" width="14" height="14"/>' : '<circle r="7"/>'}
+    <text x="11" y="4" stroke="none">${card.group}/${card.number || '01'}</text></g>` : '';
+  const levelNote = changesFloor ? (back ? 'Von EG über TR 1 nach ' + floor : 'Über TR 1 nach ' + card.floor) : 'Zugang und Melder im EG';
+
+  // Geometry and labels above come from the built-in scenario data.
+  $('map').innerHTML = `<svg viewBox="0 0 510 287" role="img" aria-label="${back ? 'Detailplan' : 'Zugangsplan'} ${floor} für Meldergruppe ${card.group}" font-family="system-ui, sans-serif" font-size="10" fill="#232823">
+    <defs><marker id="routeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M0 0L10 5 0 10Z" fill="#127645"/></marker></defs>
+    <text x="32" y="26" font-size="12" font-weight="700">${floor} · ${levelNote}</text>
+    <path d="M479 41V24l-5 8m5-8 5 8" stroke="#303531" fill="none" stroke-width="2"/><text x="475" y="18">N</text>
+    <rect x="32" y="45" width="433" height="186" fill="#e8eadf" stroke="#313632" stroke-width="3"/>
+    ${roomMarkup}
+    <path d="M80 45V116 M80 160V231 M32 116H64 M32 160H58 M32 193H57" stroke="#303531" stroke-width="2"/>
+    <path d="M45 58h21m-21 5h21m-21 5h21m-21 5h21m-21 5h21m-21 5h21" stroke="#444a40"/>
+    <text x="45" y="103">TR 1</text><text x="96" y="151">Flur</text>
+    ${!back || !changesFloor ? '<path d="M56 160v71h24" fill="#f7f6ed" stroke="#303531" stroke-width="2"/><text x="59" y="197" font-weight="800">FIZ</text><text x="85" y="249">Feuerwehrzugang</text><rect x="34" y="238" width="22" height="14" fill="#fff" stroke="#303531"/><text x="37" y="248" font-size="8">FSD</text>' : ''}
+    ${!back || !changesFloor ? '<path d="M67 231h16" stroke="#faf9f3" stroke-width="4"/>' : ''}
+    ${changesFloor ? `<g transform="translate(380 237)" font-size="8"><rect width="84" height="23" fill="#faf9f3" stroke="#596456"/><path d="M8 17h17l12-11h10" stroke="#127645" stroke-width="2" fill="none"/><text x="49" y="11">${card.floor}</text><text x="4" y="10">EG</text></g>` : ''}
+    <path d="${route}" stroke="#127645" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" marker-end="url(#routeArrow)"/>
+    <g fill="#941d1a" stroke="#941d1a" stroke-width="2" font-size="10" font-weight="700">${detector.replace('<rect','<rect fill="#fff"').replace('<circle','<circle fill="#fff"')}</g>
+    <text x="32" y="273" font-size="9" fill="#494c45">Fiktives Übungsobjekt · schematischer Grundriss</text>
+  </svg>`;
 }
 
 function start(index) {
@@ -422,6 +562,7 @@ $('start').onclick = () => start($('scenario').selectedIndex);
 $('restart').onclick = () => start(exercise.scenario);
 $('cards').onchange = () => {
   $('fieldFeedback').textContent = '';
+  cardSide = 'front';
   drawCard();
   render();
 };
