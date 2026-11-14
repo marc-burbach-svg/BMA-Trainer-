@@ -80,6 +80,8 @@
 
 .login-panel{max-width:440px}.login-panel label{display:grid;gap:5px}.login-panel input{background:#161a1c;color:inherit;border:1px solid #59636a;border-radius:6px;padding:10px;font:inherit}
 .account-row{margin-bottom:12px}.cloud-status{min-height:20px;margin:0 0 10px}.mode-bar{flex-wrap:wrap}
+
+#walkMap{min-width:0;display:grid;gap:8px}#walkReview:empty{display:none}
 </style>
 </head>
 <body>
@@ -248,6 +250,21 @@
 </div>
 <button id="unlockShared">Audio auf diesem Gerät aktivieren</button>
 </section>
+<section class="panel gap" id="walkPanel" hidden>
+<h2>Erkundung im Übungsraum</h2>
+<label class="gap">Laufkarte<select id="walkCard"></select></label>
+<div id="walkMap"></div>
+<button id="walkArrive">Am Melder angekommen</button>
+<p id="walkProgress" class="muted compact" role="status"></p>
+<label class="gap">Vorgehen des Trupps<select id="walkChoice">
+<option value="">Vorgehen auswählen</option>
+<option value="fire">Brandverdacht melden und weitere Maßnahmen abstimmen</option>
+<option value="false">Täuschungsalarm melden und Rückstellung anfragen</option>
+<option value="investigate">Weitere Erkundung und Unterstützung anfordern</option>
+</select></label>
+<button id="walkSend">Entscheidung melden</button>
+<p id="walkReview" role="status"></p>
+</section>
 <section id="instructorPanel" class="panel gap" hidden>
 <h2>Instruktor</h2>
 <button id="initRoom" hidden>Übungsraum initialisieren</button>
@@ -256,6 +273,14 @@
 <label class="gap">Meldergruppe / Melder<select id="cloudLine"></select></label>
 <div class="scenario-actions"><button id="cloudRaise" class="danger">Auslösen</button><button id="cloudClear">Auslösung aufheben</button></div>
 <button id="cloudClearAll">Alle Auslösungen aufheben</button>
+<div class="gap">
+<h3>Bewertung und Freigabe</h3>
+<p class="muted compact">Ankunft und Vorgehen stehen im Abschnitt Erkundung. Prüfe den Weg des Trupps und hake die bestätigten Schritte ab.</p>
+<div class="scenario-actions"><button id="reviewRight">Richtig</button><button id="reviewWrong">Falsch</button></div>
+<label><input id="routeChecked" type="checkbox"> Laufweg und Ankunft geprüft</label>
+<label><input id="areaChecked" type="checkbox"> Melderbereiche erkundet</label>
+<label><input id="causeChecked" type="checkbox"> Auslöseursache behoben</label>
+</div>
 <button id="cloudApprove" class="action">BMZ-Rückstellung freigeben</button>
 </section>
 </div>
@@ -678,14 +703,7 @@ function drawCard() {
   const site = floorPlans[exercise.scenario];
   const back = cardSide === 'back';
   const manual = card.type === 'Handfeuermelder';
-  const floor = back ? card.floor : 'EG';
   const changesFloor = card.floor !== 'EG';
-  const rooms = site.floors[floor];
-  const bounds = [80,...site.breaks,465];
-  const target = back || !changesFloor ? rooms.indexOf(card.room) : -1;
-  const roomCenter = index => (bounds[index % 3] + bounds[index % 3 + 1]) / 2;
-  const isUpper = target < 3;
-
   $('cardFront').setAttribute('aria-pressed',String(!back));
   $('cardBack').setAttribute('aria-pressed',String(back));
   $('mapTitle').textContent = site.name + ' · ' + (back ? 'Detailplan' : 'Gebäudeübersicht');
@@ -697,6 +715,22 @@ function drawCard() {
     'Grün: Laufweg · ' + (manual ? 'Quadrat: Handfeuermelder' : 'Kreis: Rauchmelder') +
       (changesFloor ? ' · TR 1: Treppenraum' : ' · FIZ: Feuerwehr-Informationszentrale') :
     'Grün: Laufweg · FIZ: Feuerwehr-Informationszentrale · FSD: Feuerwehr-Schlüsseldepot';
+
+  $('map').innerHTML = cardDiagram(card,site,back,'routeArrow');
+}
+
+function escapeCardText(value) {
+  return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function cardDiagram(card, site, back, arrowId) {
+  const manual = card.type === 'Handfeuermelder';
+  const floor = back ? card.floor : 'EG';
+  const changesFloor = card.floor !== 'EG';
+  const rooms = site.floors[floor];
+  const bounds = [80,...site.breaks,465];
+  const target = back || !changesFloor ? rooms.indexOf(card.room) : -1;
+  const roomCenter = index => (bounds[index % 3] + bounds[index % 3 + 1]) / 2;
+  const isUpper = target < 3;
 
   const startX = changesFloor && back ? 55 : 75;
   const targetX = target < 0 ? 55 : roomCenter(target);
@@ -716,17 +750,17 @@ function drawCard() {
     return `<rect x="${left}" y="${y}" width="${right-left}" height="71" fill="${index === target && back ? '#fff1c7' : '#f8f7ef'}" stroke="#303531" stroke-width="2"/>
       <path d="M${hinge} ${doorY}h18" stroke="#f8f7ef" stroke-width="4"/>
       <path d="M${hinge} ${doorY}v${top ? -18 : 18}a18 18 0 0 ${top ? 1 : 0} 18 ${top ? 18 : -18}" fill="none" stroke="#63685b"/>
-      <text x="${center}" y="${top ? 65 : 217}" text-anchor="middle">${room}</text>`;
+      <text x="${center}" y="${top ? 65 : 217}" text-anchor="middle">${escapeCardText(room)}</text>`;
   }).join('');
   const detector = target >= 0 && back ? `<g transform="translate(${targetX} ${detectorY})">
     ${manual ? '<rect x="-7" y="-7" width="14" height="14"/>' : '<circle r="7"/>'}
-    <text x="11" y="4" stroke="none">${card.group}/${card.number || '01'}</text></g>` : '';
+    <text x="11" y="4" stroke="none">${escapeCardText(card.group)}/${escapeCardText(card.number || '01')}</text></g>` : '';
   const levelNote = changesFloor ? (back ? 'Von EG über TR 1 nach ' + floor : 'Über TR 1 nach ' + card.floor) : 'Zugang und Melder im EG';
 
   // Geometry and labels above come from the built-in scenario data.
-  $('map').innerHTML = `<svg viewBox="0 0 510 287" role="img" aria-label="${back ? 'Detailplan' : 'Zugangsplan'} ${floor} für Meldergruppe ${card.group}" font-family="system-ui, sans-serif" font-size="10" fill="#232823">
-    <defs><marker id="routeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M0 0L10 5 0 10Z" fill="#127645"/></marker></defs>
-    <text x="32" y="26" font-size="12" font-weight="700">${floor} · ${levelNote}</text>
+  return `<svg viewBox="0 0 510 287" role="img" aria-label="${back ? 'Detailplan' : 'Zugangsplan'} ${escapeCardText(floor)} für Meldergruppe ${escapeCardText(card.group)}" font-family="system-ui, sans-serif" font-size="10" fill="#232823">
+    <defs><marker id="${arrowId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M0 0L10 5 0 10Z" fill="#127645"/></marker></defs>
+    <text x="32" y="26" font-size="12" font-weight="700">${escapeCardText(floor)} · ${escapeCardText(levelNote)}</text>
     <path d="M479 41V24l-5 8m5-8 5 8" stroke="#303531" fill="none" stroke-width="2"/><text x="475" y="18">N</text>
     <rect x="32" y="45" width="433" height="186" fill="#e8eadf" stroke="#313632" stroke-width="3"/>
     ${roomMarkup}
@@ -735,8 +769,8 @@ function drawCard() {
     <text x="45" y="103">TR 1</text><text x="96" y="151">Flur</text>
     ${!back || !changesFloor ? '<path d="M56 160v71h24" fill="#f7f6ed" stroke="#303531" stroke-width="2"/><text x="59" y="197" font-weight="800">FIZ</text><text x="85" y="249">Feuerwehrzugang</text><rect x="34" y="238" width="22" height="14" fill="#fff" stroke="#303531"/><text x="37" y="248" font-size="8">FSD</text>' : ''}
     ${!back || !changesFloor ? '<path d="M67 231h16" stroke="#faf9f3" stroke-width="4"/>' : ''}
-    ${changesFloor ? `<g transform="translate(380 237)" font-size="8"><rect width="84" height="23" fill="#faf9f3" stroke="#596456"/><path d="M8 17h17l12-11h10" stroke="#127645" stroke-width="2" fill="none"/><text x="49" y="11">${card.floor}</text><text x="4" y="10">EG</text></g>` : ''}
-    <path d="${route}" stroke="#127645" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" marker-end="url(#routeArrow)"/>
+    ${changesFloor ? `<g transform="translate(380 237)" font-size="8"><rect width="84" height="23" fill="#faf9f3" stroke="#596456"/><path d="M8 17h17l12-11h10" stroke="#127645" stroke-width="2" fill="none"/><text x="49" y="11">${escapeCardText(card.floor)}</text><text x="4" y="10">EG</text></g>` : ''}
+    <path d="${route}" stroke="#127645" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" marker-end="url(#${arrowId})"/>
     <g fill="#941d1a" stroke="#941d1a" stroke-width="2" font-size="10" font-weight="700">${detector.replace('<rect','<rect fill="#fff"').replace('<circle','<circle fill="#fff"')}</g>
     <text x="32" y="273" font-size="9" fill="#494c45">Fiktives Übungsobjekt · schematischer Grundriss</text>
   </svg>`;
@@ -1168,18 +1202,19 @@ $('scenarioEditor').addEventListener('toggle', () => {
 });
 
 render();
-const cloud = {role:null, state:null, pending:false, stopRole:null, stopRoom:null, epoch:0};
+const cloud = {role:null, state:null, pending:false, connected:false, stopRole:null, stopRoom:null, epoch:0};
 const idleRoom = () => ({
   object:'', alarms:[], active:[], approved:false, transmitted:false,
   fatQuiet:false, muted:false, controlsOff:false, ueOff:false, ueTest:false,
-  event:'Anlage in Ruhe'
+  revision:0, alarmKeys:[], arrived:[], decision:'', review:'',
+  routeChecked:false, areaChecked:false, causeChecked:false, event:'Anlage in Ruhe'
 });
 const instructor = () => cloud.role === 'instructor';
 const cloudMessage = message => { $('cloudStatus').textContent = message; };
 
 function cloudControls() {
   const room = cloud.state;
-  const ready = Boolean(room && !cloud.pending);
+  const ready = Boolean(room && cloud.connected && !cloud.pending);
   const live = Boolean(room?.alarms.length);
   const selected = selectedCloudLine();
   const key = selected && lineKey(selected);
@@ -1187,15 +1222,16 @@ function cloudControls() {
   $('cloudRaise').disabled = !ready || !key || room.active.includes(key);
   $('cloudClear').disabled = !ready || !key || !room.active.includes(key);
   $('cloudClearAll').disabled = !ready || !room.active.length;
-  $('cloudApprove').disabled = !ready || !live || room.active.length > 0 || room.approved;
+  $('cloudApprove').disabled = !ready || !readyForRelease(room) || room.approved;
   $('cloudObject').disabled = !ready || live;
   $('cloudLine').disabled = !ready || !cloudObject();
   $('cloudObjectName').textContent = room?.object || 'Übungsanlage';
   $('cloudPhase').textContent = !room ? 'Verbindung wird aufgebaut' : !live ? 'Anlage in Ruhe' :
     room.approved ? 'BMZ-Rückstellung freigegeben' : room.active.length ?
-      room.active.length + ' anstehende Auslösung(en)' : 'Auslösungen aufgehoben · Freigabe ausstehend';
+      room.active.length + ' anstehende Auslösung(en)' : 'Auslösungen aufgehoben · Erkundung und Freigabe prüfen';
   $('cloudBeacon').classList.toggle('is-active',live);
   if (mode !== 'shared') return;
+  renderWalk(room,ready,live);
   $('reset').disabled = !ready || !room.approved || !live;
   for (const [id,field] of [['buzzer','fatQuiet'],['silence','muted'],['controlsOff','controlsOff'],['ueOff','ueOff'],['ueTest','ueTest']]) {
     const blocked = field === 'fatQuiet' && (!live || room?.fatQuiet) ||
@@ -1208,6 +1244,13 @@ function cloudControls() {
 function updateSharedPanel() {
   if (mode !== 'shared') return;
   const r = cloud.state;
+  if (instructor() && r?.alarms.length && cloudObject()?.name !== r.object) {
+    const choice = [...$('cloudObject').options].find(option => option.text === r.object);
+    if (choice) {
+      $('cloudObject').value = choice.value;
+      populateCloudLines();
+    }
+  }
   const previous = exercise;
   const next = newFreeSession();
   if (r) {
@@ -1244,6 +1287,7 @@ function openShared() {
   if (cloud.state?.event) appendLog(cloud.state.event);
   populateCloudObjects();
   unlockAudio();
+  if (audioContext) prepareCinemaRecording();
   updateSharedPanel();
 }
 
@@ -1295,25 +1339,39 @@ function roomAlarm(line) {
   const {group,number,type,floor,room} = line;
   return {group,number,type,floor,room};
 }
-async function changeRoom(operation) {
-  if (mode !== 'shared' || !cloud.state || cloud.pending) return;
-  cloud.pending = true;
-  cloudControls();
+async function changeRoom(operation, fastField) {
+  if (mode !== 'shared' || !cloud.state || !cloud.connected || cloud.pending) return;
   const epoch = cloud.epoch;
+  const before = cloud.state;
+  let next;
   try {
-    await cloud.dbApi.runTransaction(cloud.db, async tx => {
-      const snapshot = await tx.get(cloud.roomRef);
-      if (!snapshot.exists()) throw Error('Übungsraum fehlt.');
-      const next = operation(snapshot.data());
-      tx.set(cloud.roomRef, next);
-    });
+    next = operation(before);
+  } catch (error) {
+    cloudMessage(error.message);
+    return;
+  }
+  cloud.pending = true;
+  try {
+    if (fastField) {
+      cloud.state = next;
+      updateSharedPanel();
+      await cloud.dbApi.updateDoc(cloud.roomRef,{[fastField]:next[fastField],event:next.event,revision:before.revision+1});
+    } else {
+      const patch = Object.fromEntries(Object.keys(next).filter(key => next[key] !== before[key])
+        .map(key => [key,next[key]]));
+      await cloud.dbApi.updateDoc(cloud.roomRef,{...patch,revision:before.revision+1});
+    }
     if (epoch === cloud.epoch) cloudMessage('Verbunden');
   } catch (error) {
-    if (epoch === cloud.epoch) cloudMessage(error.code ? 'Aktion fehlgeschlagen: ' + error.code : error.message);
+    if (epoch === cloud.epoch) {
+      if (cloud.state === next) cloud.state = before;
+      cloudMessage(error.code === 'permission-denied' ?
+        'Aktion abgelehnt. Warte auf den aktuellen Stand und versuche es erneut.' : 'Aktion fehlgeschlagen: ' + (error.code || error.message));
+    }
   } finally {
     if (epoch === cloud.epoch) {
       cloud.pending = false;
-      cloudControls();
+      updateSharedPanel();
     }
   }
 }
@@ -1323,7 +1381,8 @@ function raiseRoom(room, name, lines) {
   const alarms = [...room.alarms, ...lines.filter(line => !known.has(lineKey(line))).map(roomAlarm)];
   if (alarms.length > 40) throw Error('Maximal 40 gespeicherte Meldungen pro Übung.');
   const active = [...new Set([...room.active, ...lines.map(lineKey)])];
-  return {...room, object:name, alarms, active, approved:false, fatQuiet:false,
+  return {...room, object:name, alarms, active, alarmKeys:alarms.map(lineKey), arrived:[], decision:'', review:'',
+    routeChecked:false, areaChecked:false, causeChecked:false, approved:false, fatQuiet:false,
     transmitted:room.transmitted || !room.ueOff, event:'Ausgelöst · ' + lines.map(lineKey).join(', ')};
 }
 $('cloudStart').onclick = () => {
@@ -1349,7 +1408,7 @@ $('cloudClearAll').onclick = () => {
 };
 $('cloudApprove').onclick = () => {
   if (instructor()) changeRoom(room => {
-    if (!room.alarms.length || room.active.length) throw Error('Hebe zuerst alle Auslösungen auf.');
+    if (!readyForRelease(room)) throw Error('Erkundung, Bewertung oder Checkliste noch offen.');
     return {...room,approved:true,event:'Instruktor hat BMZ-Rückstellung freigegeben'};
   });
 };
@@ -1368,15 +1427,16 @@ for (const [id,field,event] of fbfOps) {
         throw Error('Befehl in diesem Anlagenzustand gesperrt.');
       }
       return {...room, [field]:field === 'fatQuiet' || field === 'ueTest' ? true : !room[field], event};
-    });
+    },field);
   };
 }
 const localReset = $('reset').onclick;
 $('reset').onclick = () => {
   if (mode !== 'shared') return localReset();
   changeRoom(room => {
-    if (!room.approved || room.active.length || !room.alarms.length) throw Error('Die Freigabe fehlt.');
-    return {...room, object:'', alarms:[],active:[],approved:false,transmitted:false,fatQuiet:false,ueTest:false,event:'BMZ rückgestellt'};
+    if (!room.approved || !readyForRelease(room)) throw Error('Die Freigabe fehlt.');
+    return {...idleRoom(),revision:room.revision,muted:room.muted,controlsOff:room.controlsOff,
+      ueOff:room.ueOff,event:'BMZ rückgestellt'};
   });
 };
 
@@ -1385,6 +1445,7 @@ function disconnectRoom() {
   cloud.stopRoom?.();
   cloud.stopRoom = null;
   cloud.state = null;
+  cloud.connected = false;
   cloud.pending = false;
   audioTracks.forEach(stopTrack);
 }
@@ -1401,14 +1462,15 @@ function listenToRoom() {
   cloud.stopRoom = cloud.dbApi.onSnapshot(cloud.roomRef,{includeMetadataChanges:true}, snapshot => {
     if (epoch !== cloud.epoch || snapshot.metadata.hasPendingWrites) return;
     if (snapshot.metadata.fromCache) {
-      cloud.state = null;
-      cloudMessage('Verbindung unterbrochen. Warte auf den Server.');
+      cloud.connected = false;
+      cloudMessage('Warte auf den Server. Bedienung vorübergehend gesperrt.');
       updateSharedPanel();
       return;
     }
     const next = snapshot.exists() ? snapshot.data() : null;
     if (next?.event && next.event !== cloud.state?.event && mode === 'shared') appendLog(next.event);
     cloud.state = next;
+    cloud.connected = true;
     cloudMessage(next ? 'Verbunden' : 'Der Instruktor muss den Übungsraum initialisieren.');
     $('initRoom').hidden = !instructor() || Boolean(next);
     updateSharedPanel();
@@ -1438,7 +1500,7 @@ async function setupCloud() {
     const app = appApi.initializeApp(config);
     cloud.dbApi = dbApi;
     cloud.db = dbApi.getFirestore(app);
-    cloud.roomRef = dbApi.doc(cloud.db,'bmaRooms','training');
+    cloud.roomRef = dbApi.doc(cloud.db,'bmaRooms','trainingV13');
     const auth = authApi.getAuth(app);
     $('loginButton').disabled = false;
     $('loginForm').onsubmit = async event => {
@@ -1488,8 +1550,123 @@ async function setupCloud() {
     lockTrainer('Firebase konnte nicht geladen werden. Prüfe Konfiguration und Internetverbindung.');
   }
 }
-setupCloud();
+const decisions = {
+  fire:'Brandverdacht melden und weitere Maßnahmen abstimmen',
+  false:'Täuschungsalarm melden und Rückstellung anfragen',
+  investigate:'Weitere Erkundung und Unterstützung anfordern'
+};
+const readyForRelease = room => room.alarms.length > 0 && !room.active.length &&
+  room.arrived.length === room.alarmKeys.length && room.review === 'right' &&
+  room.routeChecked && room.areaChecked && room.causeChecked;
+let walkSignature = '';
+let walkSide = 'front';
+function selectedWalkAlarm() {
+  return cloud.state?.alarms.find(alarm => lineKey(alarm) === $('walkCard').value);
+}
+function customPlan(room, alarm) {
+  const overview = ['Empfang','Foyer','Büro','Nebenraum','Technik','Treppenraum'];
+  const detail = ['Nebenraum',alarm.room,'Technik','Lager','Aufenthalt','Treppenraum'];
+  return {name:room.object,breaks:[174,316],floors:{EG:overview,[alarm.floor]:detail}};
+}
+function drawWalkMap() {
+  const room = cloud.state;
+  const alarm = selectedWalkAlarm();
+  if (!alarm) {
+    $('walkMap').replaceChildren();
+    return;
+  }
+  const preset = floorPlans.find(plan => plan.name === room.object);
+  const site = preset?.floors[alarm.floor]?.includes(alarm.room) ? preset : customPlan(room,alarm);
+  const card = document.createElement('div');
+  card.className = 'laufkarte';
+  const tabs = document.createElement('div');
+  tabs.className = 'card-tabs';
+  for (const [key,label] of [['front','Vorderseite'],['back','Rückseite']]) {
+    const button = document.createElement('button');
+    button.textContent = label;
+    button.setAttribute('aria-pressed',String(walkSide === key));
+    button.onclick = () => {
+      walkSide = key;
+      drawWalkMap();
+      const target = $('walkMap').querySelector('[aria-pressed="true"]');
+      target?.focus();
+    };
+    tabs.append(button);
+  }
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  head.textContent = room.object + ' · ' + lineKey(alarm) + ' · ' + alarm.floor + ' · ' + alarm.room;
+  const map = document.createElement('div');
+  map.className = 'card-map';
+  map.innerHTML = cardDiagram(alarm,site,walkSide === 'back','sharedRouteArrow');
+  const legend = document.createElement('p');
+  legend.className = 'card-key';
+  legend.textContent = 'Grün: Laufweg · FIZ: Feuerwehr-Informationszentrale · TR 1: Treppenraum · Rot: Melderstandort';
+  card.append(head,map,legend);
+  $('walkMap').replaceChildren(tabs,card);
+}
+function renderWalk(room, ready, live) {
+  $('walkPanel').hidden = !live;
+  const signature = JSON.stringify([room?.object,room?.alarms]);
+  if (signature !== walkSignature) {
+    const selected = $('walkCard').value;
+    walkSignature = signature;
+    $('walkCard').replaceChildren(new Option('Meldergruppe wählen',''),
+      ...(room?.alarms || []).map(alarm => new Option(lineKey(alarm) + ' · ' + alarm.floor + ' · ' + alarm.room,lineKey(alarm))));
+    if (room?.alarmKeys.includes(selected)) $('walkCard').value = selected;
+    else {
+      walkSide = 'front';
+      $('walkChoice').value = '';
+    }
+    drawWalkMap();
+  }
+  const alarm = selectedWalkAlarm();
+  const arrived = room?.arrived || [];
+  $('walkArrive').disabled = !ready || !alarm || arrived.includes(lineKey(alarm));
+  $('walkProgress').textContent = live ? arrived.length + ' von ' + room.alarmKeys.length +
+    ' Melderstandorten bestätigt' + (arrived.length ? ' · ' + arrived.join(', ') : '') : '';
+  const canDecide = ready && live && arrived.length === room.alarmKeys.length && (!room.decision || room.review === 'wrong');
+  $('walkChoice').disabled = !canDecide;
+  $('walkSend').disabled = !canDecide || !decisions[$('walkChoice').value];
+  $('walkReview').textContent = room?.decision ? decisions[room.decision] + ' · ' +
+    ({right:'Richtig',wrong:'Falsch – neues Vorgehen melden',pending:'Bewertung ausstehend'}[room.review] || '') : '';
+  $('reviewRight').disabled = $('reviewWrong').disabled = !ready || !instructor() || room?.review !== 'pending';
+  for (const id of ['routeChecked','areaChecked','causeChecked']) {
+    $(id).checked = Boolean(room?.[id]);
+    $(id).disabled = !ready || !instructor() || !live;
+  }
+}
+$('walkCard').onchange = () => {
+  walkSide = 'front';
+  drawWalkMap();
+  cloudControls();
+};
+$('walkChoice').onchange = cloudControls;
+$('walkArrive').onclick = () => {
+  const alarm = selectedWalkAlarm();
+  if (!alarm) return;
+  const key = lineKey(alarm);
+  changeRoom(room => ({...room,arrived:[...new Set([...room.arrived,key])],event:'Ankunft bestätigt · '+key}));
+};
+$('walkSend').onclick = () => {
+  const choice = $('walkChoice').value;
+  if (!decisions[choice]) return;
+  changeRoom(room => ({...room,decision:choice,review:'pending',event:'Vorgehen gemeldet'}));
+};
+for (const [id,value] of [['reviewRight','right'],['reviewWrong','wrong']]) {
+  $(id).onclick = () => {
+    if (instructor()) changeRoom(room => ({...room,review:value,approved:false,event:value === 'right' ? 'Vorgehen richtig' : 'Vorgehen falsch'}));
+  };
+}
+for (const id of ['routeChecked','areaChecked','causeChecked']) {
+  $(id).onchange = () => {
+    if (!instructor()) return;
+    const checked = $(id).checked;
+    changeRoom(room => ({...room,[id]:checked,approved:false,event:'Checkliste aktualisiert'}));
+  };
+}
 
+setupCloud();
 </script>
 </body>
 </html>
