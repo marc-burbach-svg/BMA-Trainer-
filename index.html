@@ -82,6 +82,11 @@
 .account-row{margin-bottom:12px}.cloud-status{min-height:20px;margin:0 0 10px}.mode-bar{flex-wrap:wrap}
 
 #walkMap{min-width:0;display:grid;gap:8px}#walkReview:empty{display:none}
+
+.tech-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tech-unit{text-align:center;display:grid;justify-items:center;align-content:start;gap:7px}.tech-unit h3{font-size:14px}
+.rwa-key{width:98px;height:75px;border:4px solid #a64512;background:#f38b39;color:#21160d;font-size:12px;box-shadow:inset 0 0 0 1px #ffbe84}.rwa-key span{display:block;background:#fff2de;color:#161616;margin-bottom:4px;font-size:16px}.rwa-key:hover:not(:disabled){background:#ffad66}.rwa-key[aria-pressed=true]{opacity:1;box-shadow:0 0 0 2px #ffc980}.rwa-key[aria-pressed=true] span{background:#ffe099}
+.sprinkler{position:relative;width:78px;height:75px}.sprinkler i,.sprinkler b{position:absolute;left:50%;transform:translateX(-50%)}.sprinkler i{width:30px;height:39px;top:7px;border:4px solid #bc9661;border-radius:4px 4px 46% 46%;background:linear-gradient(90deg,transparent 43%,#db433c 43% 57%,transparent 57%)}.sprinkler b{top:43px;width:39px;height:6px;border-radius:4px;background:#bfa078}.sprinkler span{display:none;position:absolute;top:49px;left:5px;right:5px;bottom:0;background:repeating-linear-gradient(80deg,transparent 0 7px,#85d7ff 8px 9px);clip-path:polygon(41% 0,59% 0,100% 100%,0 100%)}.flowing .sprinkler span{display:block}.flowing .sprinkler i{background:none}
+#ueTestFlag:empty,#guidedBfs:empty{display:none}
 </style>
 </head>
 <body>
@@ -156,7 +161,7 @@
 <div class="device fbf" aria-label="Feuerwehr-Bedienfeld">
 <h2 class="device-title">Feuerwehr-Bedienfeld</h2>
 <div class="fbf-grid"><div class="fbf-cell"><span id="fbfRun" class="lamp green" aria-hidden="true"></span><span>Bedienfeld<br>in Betrieb</span></div><div class="fbf-cell"><span id="ue" class="lamp off" aria-hidden="true"></span><span>ÜE<br>ausgelöst</span></div><div class="fbf-cell"><span id="fbfExt" class="lamp off" aria-hidden="true"></span><span>Löschanlage<br>ausgelöst</span></div><div class="fbf-cell"><span id="fbfControls" class="lamp off" aria-hidden="true"></span><span>Brandfall-<br>Steuerungen ab</span><button id="controlsOff" class="panel-key" aria-label="Brandfall-Steuerungen ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span id="fbfSilence" class="lamp off" aria-hidden="true"></span><span>Akustische<br>Signale ab</span><button id="silence" class="panel-key" aria-label="Akustische Signale ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span id="fbfReset" class="lamp off" aria-hidden="true"></span><span>BMZ<br>rückstellen</span><button id="reset" class="panel-key" aria-label="BMZ rückstellen" disabled></button></div><div class="fbf-cell"><span id="fbfUeOff" class="lamp off" aria-hidden="true"></span><span>ÜE ab</span><button id="ueOff" class="panel-key" aria-label="ÜE ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span></span><span>ÜE Nr.<small class="ue-number">0042</small>prüfen</span><button id="ueTest" class="panel-key" aria-label="ÜE prüfen" disabled></button></div></div></div>
-<p class="feedback compact" id="panelFeedback" role="status"></p>
+<p id="ueTestFlag" class="muted compact" role="status"></p><p id="guidedBfs" class="muted compact"></p><p class="feedback compact" id="panelFeedback" role="status"></p>
 </section>
 <section class="panel"><div class="section-title"><h2>Ereignisprotokoll</h2></div><ol id="log" class="report compact" aria-label="Ereignisse"><li>Noch keine Ereignisse</li></ol></section>
 </div>
@@ -235,6 +240,24 @@
 </div>
 </div>
 </section>
+<section class="panel gap">
+<h2>Anlagentechnik</h2>
+<div class="tech-grid">
+<div class="tech-unit">
+<h3>Sprinkleranlage</h3>
+<div class="sprinkler" aria-hidden="true"><i></i><b></b><span></span></div>
+<p class="compact" id="freeTechSprState">Bereit</p>
+<button id="freeTechSpr" type="button">Sprinkler auslösen</button>
+</div>
+<div class="tech-unit">
+<h3>Rauch- und Wärmeabzug</h3>
+<button id="freeTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span aria-hidden="true">↑ ↑ ↑</span>Rauchabzug</button>
+<p class="compact" id="freeTechRwaState">Geschlossen</p>
+<button id="freeTechRwaReset" type="button" disabled>RWA zurückstellen</button>
+</div>
+</div>
+<p id="freeTechBfs" class="muted compact" role="status"></p>
+</section>
 <section class="panel gap"><h2>FAT prüfen</h2>
 <button id="toggleFault" aria-pressed="false">Störung simulieren</button>
 <p class="muted compact">„Summer ab / Test“ kurz antippen zum Quittieren oder 5 Sekunden halten für den Anzeigentest.</p>
@@ -249,6 +272,24 @@
 <small class="muted">Optische Alarmierung</small>
 </div>
 <button id="unlockShared">Audio auf diesem Gerät aktivieren</button>
+</section>
+<section class="panel gap">
+<h2>Anlagentechnik</h2>
+<div class="tech-grid">
+<div class="tech-unit">
+<h3>Sprinkleranlage</h3>
+<div class="sprinkler" aria-hidden="true"><i></i><b></b><span></span></div>
+<p class="compact" id="cloudTechSprState">Bereit</p>
+<button id="cloudTechSpr" type="button">Sprinkler auslösen</button>
+</div>
+<div class="tech-unit">
+<h3>Rauch- und Wärmeabzug</h3>
+<button id="cloudTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span aria-hidden="true">↑ ↑ ↑</span>Rauchabzug</button>
+<p class="compact" id="cloudTechRwaState">Geschlossen</p>
+<button id="cloudTechRwaReset" type="button" disabled>RWA zurückstellen</button>
+</div>
+</div>
+<p id="cloudTechBfs" class="muted compact" role="status"></p>
 </section>
 <section class="panel gap" id="walkPanel" hidden>
 <h2>Erkundung im Übungsraum</h2>
@@ -637,7 +678,12 @@ function render() {
   $('level').disabled = testing || levels.length === 1;
   $('buzzer').disabled = !free && (!live || s.fatQuiet);
   syncAudio();
-  const transmitted = Boolean((live && s.transmitted) || ((free || shared) && s.ueTest));
+  const testActive = refreshUeTest(s);
+  const transmitted = Boolean((live && s.transmitted) || testActive);
+  $('fbfExt').className = 'lamp ' + (live && s.data.alarms.some(isSprinkler) ? 'red' : 'off');
+  const bfs = !free && !shared && s && brandControls[technologyName(s)];
+  $('guidedBfs').textContent = bfs ? 'Brandfallsteuerung · ' +
+    (s.controlsOff ? 'abgeschaltet' : live ? bfs : 'bereit') : '';
   $('ue').className = 'lamp ' + (transmitted ? 'red' : 'off');
   $('ue').setAttribute('aria-label', transmitted ? 'ÜE ausgelöst' : 'ÜE nicht ausgelöst');
   $('fbfReset').className = 'lamp ' + (live ? 'red' : 'off');
@@ -653,6 +699,7 @@ function render() {
   $('reset').disabled = !free && !live;
   if (free) {
     renderPeripherals(s, live);
+    renderTechnology('freeTech',s,live);
     renderObjectControls(s);
     $('toggleFault').setAttribute('aria-pressed', String(s.fault));
     $('toggleFault').textContent = s.fault ? 'Störung beheben' : 'Störung simulieren';
@@ -708,7 +755,7 @@ function drawCard() {
   $('cardBack').setAttribute('aria-pressed',String(back));
   $('mapTitle').textContent = site.name + ' · ' + (back ? 'Detailplan' : 'Gebäudeübersicht');
   $('cardMeta').textContent = card.floor + ' · ' + card.room + ' · ' +
-    (manual ? 'Handfeuermelder' : 'Automatischer Rauchmelder');
+    card.type;
   $('cardGroup').textContent = 'MG ' + card.group;
   $('cardGroup').className = manual ? 'manual' : '';
   $('cardLegend').textContent = back ?
@@ -848,15 +895,6 @@ $('ueOff').onclick = () => {
   appendLog(message);
   render();
 };
-$('ueTest').onclick = () => {
-  if (mode === 'free') {
-    exercise.ueTest = true;
-    render();
-  }
-  const message = 'ÜE-Prüfung simuliert. Die Anlage meldet eine erfolgreiche Übertragung.';
-  $('panelFeedback').textContent = message;
-  appendLog(message);
-};
 $('inspect').onclick = () => {
   const alarm = exercise.data.alarms[exercise.index];
   if ($('cards').value !== alarm.group) {
@@ -905,6 +943,8 @@ $('reset').onclick = () => {
     }
     exercise.data.alarms = [];
     exercise.transmitted = exercise.ueTest = false;
+    exercise.ueUntil = 0;
+    exercise.techObject = '';
     exercise.fatQuiet = false;
     exercise.index = exercise.level = 0;
     report('BMZ rückgestellt. Gespeicherte Alarme sind gelöscht.');
@@ -970,6 +1010,7 @@ const callPoints = [
 const smokePoint = {group:'043',number:'01',type:'Rauchmelder',floor:'1. OG',room:'Flur'};
 function registerPeripheralAlarm(alarm, message) {
   unlockAudio();
+  exercise.techObject ||= currentObject()?.name || '';
   if (!exercise.data.alarms.includes(alarm)) exercise.data.alarms.push(alarm);
   exercise.fatQuiet = false;
   exercise.transmitted ||= !exercise.ueOff;
@@ -1160,8 +1201,8 @@ $('objectForm').onsubmit = event => {
     line.number = String(Number(line.number)).padStart(2, '0');
   }
   const keys = lines.map(lineKey);
-  if (new Set(keys).size !== keys.length || keys.some(key => ['041/01','042/01','043/01'].includes(key))) {
-    $('editorStatus').textContent = 'Meldernummern je Gruppe nur einmal vergeben. 041/01, 042/01 und 043/01 sind für die vorhandenen Geräte belegt.';
+  if (new Set(keys).size !== keys.length || keys.some(key => ['041/01','042/01','043/01','044/01'].includes(key))) {
+    $('editorStatus').textContent = 'Meldernummern je Gruppe nur einmal vergeben. 041/01, 042/01, 043/01 und 044/01 sind für die vorhandenen Geräte belegt.';
     return;
   }
   const id = editingObject || String(Date.now());
@@ -1201,7 +1242,6 @@ $('scenarioEditor').addEventListener('toggle', () => {
   if ($('scenarioEditor').open && !$('lineRows').children.length) addEditorLine();
 });
 
-render();
 const cloud = {role:null, state:null, pending:false, connected:false, stopRole:null, stopRoom:null, epoch:0};
 const idleRoom = () => ({
   object:'', alarms:[], active:[], approved:false, transmitted:false,
@@ -1232,6 +1272,7 @@ function cloudControls() {
   $('cloudBeacon').classList.toggle('is-active',live);
   if (mode !== 'shared') return;
   renderWalk(room,ready,live);
+  renderTechnology('cloudTech',exercise || newFreeSession(),live);
   $('reset').disabled = !ready || !room.approved || !live;
   for (const [id,field] of [['buzzer','fatQuiet'],['silence','muted'],['controlsOff','controlsOff'],['ueOff','ueOff'],['ueTest','ueTest']]) {
     const blocked = field === 'fatQuiet' && (!live || room?.fatQuiet) ||
@@ -1413,8 +1454,7 @@ $('cloudApprove').onclick = () => {
   });
 };
 const fbfOps = [['buzzer','fatQuiet','FAT-Summer quittiert'],['silence','muted','Gebäudeakustik umgeschaltet'],
-  ['controlsOff','controlsOff','Brandfallsteuerungen umgeschaltet'],['ueOff','ueOff','ÜE umgeschaltet'],
-  ['ueTest','ueTest','ÜE-Prüfung']];
+  ['controlsOff','controlsOff','Brandfallsteuerungen umgeschaltet'],['ueOff','ueOff','ÜE umgeschaltet']];
 for (const [id,field,event] of fbfOps) {
   const local = $(id).onclick;
   $(id).onclick = () => {
@@ -1426,7 +1466,7 @@ for (const [id,field,event] of fbfOps) {
           field === 'controlsOff' && room.alarms.length && !room.controlsOff) {
         throw Error('Befehl in diesem Anlagenzustand gesperrt.');
       }
-      return {...room, [field]:field === 'fatQuiet' || field === 'ueTest' ? true : !room[field], event};
+      return {...room, [field]:field === 'fatQuiet' ? true : !room[field], event};
     },field);
   };
 }
@@ -1436,7 +1476,7 @@ $('reset').onclick = () => {
   changeRoom(room => {
     if (!room.approved || !readyForRelease(room)) throw Error('Die Freigabe fehlt.');
     return {...idleRoom(),revision:room.revision,muted:room.muted,controlsOff:room.controlsOff,
-      ueOff:room.ueOff,event:'BMZ rückgestellt'};
+      ueOff:room.ueOff,ueUntil:0,event:'BMZ rückgestellt'};
   });
 };
 
@@ -1666,6 +1706,100 @@ for (const id of ['routeChecked','areaChecked','causeChecked']) {
   };
 }
 
+const sprinklerLine = {group:'044',number:'01',type:'Strömungswächter',floor:'EG',room:'Sprinklergruppe 1'};
+const suppressionObjects = new Set(['Logistikzentrum Ried','Tiefgarage Am Stadtgarten']);
+const brandControls = Object.assign(Object.create(null), {
+  'Logistikzentrum Ried':'Brandschutztor geschlossen · Lüftung abgeschaltet',
+  'Hotel am Park':'Aufzug ins EG gefahren · Brandschutztüren geschlossen',
+  'Tiefgarage Am Stadtgarten':'Entrauchungsventilatoren in Betrieb'
+});
+function technologyName(session) {
+  if (mode === 'shared') return session.object || '';
+  if (mode === 'guided') return floorPlans[session.scenario]?.name || '';
+  return session.techObject || currentObject()?.name || '';
+}
+function isSprinkler(alarm) {
+  return alarm.type === 'Strömungswächter';
+}
+function renderTechnology(prefix, session, live) {
+  const sprinkler = session.data.alarms.some(isSprinkler);
+  const room = mode === 'shared' ? cloud.state : null;
+  const available = mode !== 'shared' || Boolean(room && cloud.connected && !cloud.pending && instructor());
+  const sprinklerActive = room ? room.active.includes(lineKey(sprinklerLine)) : session.activeLines.has(lineKey(sprinklerLine));
+  const object = room?.object || cloudObject()?.name;
+  const supportsSprinkler = mode !== 'shared' || suppressionObjects.has(object);
+  $(prefix+'Spr').hidden = mode === 'shared' && (!instructor() || !supportsSprinkler);
+  $(prefix+'Spr').disabled = !available || !supportsSprinkler;
+  $(prefix+'Spr').textContent = sprinklerActive ? 'Wasserfluss beenden' : 'Sprinkler auslösen';
+  $(prefix+'SprState').textContent = sprinklerActive ? 'Wasserfluss erkannt' : sprinkler ? 'Auslösung gespeichert' : 'Bereit';
+  $(prefix+'SprState').parentElement.classList.toggle('flowing',sprinklerActive);
+  $(prefix+'Rwa').disabled = !available || Boolean(session.rwaOpen);
+  $(prefix+'RwaReset').disabled = !available || !session.rwaOpen;
+  $(prefix+'RwaReset').hidden = mode === 'shared' && !instructor();
+  $(prefix+'Rwa').setAttribute('aria-pressed',String(Boolean(session.rwaOpen)));
+  $(prefix+'RwaState').textContent = session.rwaOpen ? 'Rauchabzug geöffnet' : 'Rauchabzug geschlossen';
+  const outputs = brandControls[technologyName(session)];
+  $(prefix+'Bfs').textContent = !outputs ? 'Keine automatische Brandfallsteuerung für dieses Objekt hinterlegt.' :
+    'Brandfallsteuerung · ' + (session.controlsOff ? 'abgeschaltet' : live ? outputs : 'bereit');
+}
+$('freeTechSpr').onclick = () => {
+  const key = lineKey(sprinklerLine);
+  if (exercise.activeLines.delete(key)) {
+    report('Sprinkler-Wasserfluss beendet. Die Meldung bleibt bis zur BMZ-Rückstellung gespeichert.');
+    render();
+  } else {
+    exercise.activeLines.add(key);
+    registerPeripheralAlarm(sprinklerLine,'Sprinkleranlage ausgelöst');
+  }
+};
+for (const [suffix,open] of [['Rwa',true],['RwaReset',false]]) {
+  const event = open ? 'RWA geöffnet · manuelle Auslösung' : 'RWA zurückgestellt · Rauchabzug geschlossen';
+  $('freeTech'+suffix).onclick = () => {
+    exercise.rwaOpen = open;
+    report(event);
+    render();
+  };
+  $('cloudTech'+suffix).onclick = () => {
+    if (instructor()) changeRoom(room => ({...room,rwaOpen:open,event}));
+  };
+}
+$('cloudTechSpr').onclick = () => {
+  const object = cloud.state?.object || cloudObject()?.name;
+  if (!instructor() || !suppressionObjects.has(object)) return;
+  const key = lineKey(sprinklerLine);
+  changeRoom(room => room.active.includes(key) ?
+    {...room,active:room.active.filter(id => id !== key),event:'Sprinkler-Wasserfluss beendet'} :
+    raiseRoom(room,object,[sprinklerLine]));
+};
+
+let ueTimer;
+function refreshUeTest(session) {
+  clearTimeout(ueTimer);
+  const active = !session?.ueOff && (session?.ueUntil || 0) > Date.now();
+  $('ueTestFlag').textContent = active ? 'ÜE-Prüfung läuft' : '';
+  if (active) {
+    ueTimer = setTimeout(() => {
+      render();
+      if (mode === 'shared') cloudControls();
+    },Math.max(1,session.ueUntil - Date.now()));
+  }
+  return active;
+}
+$('ueTest').onclick = () => {
+  const event = 'ÜE-Prüfung · Rückmeldung erhalten';
+  if (mode === 'shared') {
+    changeRoom(room => {
+      if (room.ueOff) throw Error('ÜE ist abgeschaltet.');
+      return {...room,ueUntil:Date.now()+2000,event};
+    },'ueUntil');
+  } else if (exercise && !exercise.ueOff) {
+    exercise.ueUntil = Date.now()+2000;
+    report(event);
+    render();
+  }
+};
+
+render();
 setupCloud();
 </script>
 </body>
