@@ -8,6 +8,8 @@
 :root{color-scheme:dark;--bg:#101315;--panel:#1b2023;--line:#343c41;--text:#eff2f2;--muted:#aab5bc;--amber:#ffc570;--red:#ff786f;--green:#90e2aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main,header>div{max-width:1220px;margin:auto;padding:24px}header{border-bottom:1px solid var(--line);background:#161a1c}header>div,.row,.section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(29px,5vw,44px);letter-spacing:-.05em;line-height:1.05}h2{font-size:19px}h3{font-size:16px}.eyebrow,.label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.eyebrow{color:var(--red);margin-bottom:7px}.tag,.lamp{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:700}.tag{padding:7px 12px;border:1px solid var(--line);border-radius:30px}.lamp::before,.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.off{color:var(--muted)}.off::before{background:#505a60}
 .layout{display:grid;grid-template-columns:1fr 1.05fr;gap:16px;margin-top:16px;align-items:start}.stack{display:grid;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:19px;min-width:0}.instrument{border-top:4px solid #e75951}.section-title{margin-bottom:14px}.lcd{border:6px solid #0f1412;border-radius:8px;background:#bbd3a5;color:#1c321d;font:700 clamp(15px,2.3vw,20px)/1.55 ui-monospace,monospace;min-height:106px;padding:12px;box-shadow:inset 0 2px 8px #32493170}.lcd small{font-size:12px;display:block}.controls,.lamps{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}.controls button{flex:1}.lamps{gap:15px}.action{background:#f9bd65;color:#21180b;border-color:#f9bd65}.action:hover:not(:disabled){background:#ffd393;color:#21180b}button,select{font:inherit;color:inherit;background:#252d31;border:1px solid #505d64;border-radius:8px;min-height:44px;padding:8px 12px}button{cursor:pointer;font-weight:650}button:hover:not(:disabled){background:#354148}button:disabled,select:disabled{opacity:.48;cursor:default}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:3px}.danger{border-color:#b25650}.muted,footer,summary{color:var(--muted)}.compact{font-size:14px}.gap{display:grid;gap:12px}.feedback{border-left:3px solid var(--amber);padding:8px 11px;background:#242725;margin-top:13px}.feedback:empty{display:none}.plan{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#39464b;border:4px solid #39464b;border-radius:8px}.room{padding:9px 5px;text-align:center;background:#232d31;min-height:52px;display:grid;place-content:center;font-size:12px;overflow-wrap:anywhere}.route{grid-column:span 3;background:#3f4436;color:#ffe2a4}.target{background:#4d312d;color:#ffd8cf;font-weight:800}.entry{color:#99e0ac}.report{margin:0;padding:0;list-style:none;max-height:180px;overflow:auto}.report li{padding:7px 0;border-bottom:1px solid var(--line)}.report time{color:var(--muted);margin-right:8px;font:13px ui-monospace,monospace}.score{border-color:#477b59;background:#1b2922}.score h2{color:var(--green)}a{color:var(--amber)}footer{margin:19px 0;font-size:13px}details p{margin-top:8px}.toolbar label{display:grid;gap:4px;flex:1}.toolbar button{align-self:end}@media(max-width:760px){.layout{grid-template-columns:1fr}main,header>div{padding:16px}}[hidden]{display:none!important}
+
+.fbf{padding:10px;background:#131415;border:5px solid #a52d29;border-radius:7px;box-shadow:inset 0 0 0 1px #e56157;color:#f4f2ef}.fbf-name{text-align:center;font-weight:800;padding:4px 0 9px;font-size:clamp(15px,2.4vw,20px)}.fbf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #838282}.fbf-cell{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px;align-items:center;position:relative;padding:17px 6px 7px 8px;min-height:73px;border:1px solid #838282;font-size:clamp(11px,1.7vw,15px);line-height:1.2;overflow-wrap:anywhere}.fbf-number{position:absolute;top:4px;left:8px;color:#bcb9b5;font-size:10px}.fbf-cell .lamp{justify-content:center}.fbf-cell .lamp:before{width:12px;height:12px;border:1px solid #777}.fbf-cell .lamp:not(.off):before{box-shadow:0 0 9px currentColor}.fbf-key{width:44px;padding:0;display:grid;place-items:center;border:none;background:transparent;border-radius:50%}.fbf-key:before{content:"";width:25px;height:25px;border:2px solid #ddd8cc;border-radius:50%;background:linear-gradient(#eeece2,#a39e94);box-shadow:0 2px 3px #000}.fbf-key[aria-pressed="true"]:before{background:#ffc570;border-color:#fff2ce;box-shadow:0 0 9px #ffc570}.fbf-key.alarm:before{background:#f46c60;border-color:#ffd1c9;box-shadow:0 0 9px #ff786f}.fbf-caption{margin-top:10px}
 </style>
 </head>
 <body>
@@ -26,8 +28,20 @@
 </section>
 <section class="panel instrument">
 <div class="section-title"><h2>Feuerwehr-Bedienfeld</h2><span class="label">FBF</span></div>
-<div class="lamps"><span class="lamp green">Betrieb</span><span id="ue" class="lamp off">ÜE ausgelöst</span><span id="ak" class="lamp off">Akustik ab</span></div>
-<div class="controls"><button id="silence" disabled>Akustische Signale ab</button><button id="reset" class="danger" disabled>BMZ rückstellen</button></div>
+<div class="fbf" aria-label="Feuerwehr-Bedienfeld nach Vorlage FBF2003">
+<div class="fbf-name">Feuerwehr-Bedienfeld</div>
+<div class="fbf-grid">
+<div class="fbf-cell"><span class="fbf-number">1</span><span>Bedienfeld in Betrieb</span><span class="lamp green" role="img" aria-label="Betrieb aktiv"></span></div>
+<div class="fbf-cell"><span class="fbf-number">2</span><span>ÜE ausgelöst</span><span id="ue" class="lamp off" role="img" aria-label="ÜE nicht ausgelöst"></span></div>
+<div class="fbf-cell"><span class="fbf-number">3</span><span>Löschanlage ausgelöst</span><span class="lamp off" role="img" aria-label="Löschanlage nicht ausgelöst"></span></div>
+<div class="fbf-cell"><span class="fbf-number">4</span><span>Brandfall-Steuerungen ab</span><button id="controlsOff" class="fbf-key" aria-label="Brandfall-Steuerungen ab" aria-pressed="false" disabled></button></div>
+<div class="fbf-cell"><span class="fbf-number">5</span><span>Akustische Signale ab</span><button id="silence" class="fbf-key" aria-label="Akustische Signale ab" aria-pressed="false" disabled></button></div>
+<div class="fbf-cell"><span class="fbf-number">6</span><span>BMZ rückstellen</span><button id="reset" class="fbf-key" aria-label="BMZ rückstellen" disabled></button></div>
+<div class="fbf-cell"><span class="fbf-number">7</span><span>ÜE ab</span><button id="ueOff" class="fbf-key" aria-label="ÜE ab" aria-pressed="false" disabled></button></div>
+<div class="fbf-cell"><span class="fbf-number">8</span><span>ÜE Nr prüfen</span><button id="ueTest" class="fbf-key" aria-label="ÜE prüfen" disabled></button></div>
+</div>
+</div>
+<p class="muted compact fbf-caption">Digitale Nachbildung nach RLS FBF2003. Alle Schaltvorgänge sind simuliert.</p>
 <p class="feedback compact" id="panelFeedback" role="status"></p>
 </section>
 <section class="panel"><div class="section-title"><h2>Ereignisprotokoll</h2></div><ol id="log" class="report compact" aria-label="Ereignisse"><li>Noch keine Ereignisse</li></ol></section>
@@ -51,7 +65,7 @@
 <section id="result" class="panel gap score" aria-live="polite" hidden><h2>Übung abgeschlossen</h2><p id="summary"></p></section>
 </div>
 </div>
-<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte, schematische Laufkarten und vereinfachte Bedienfelder. Die Akustik wird über den Anlagenzustand dargestellt. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p></details></footer>
+<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und schematische Laufkarten. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. Die Akustik wird über den Anlagenzustand dargestellt. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p></details></footer>
 </main>
 <script>
 'use strict';
@@ -101,10 +115,15 @@ function render() {
   $('lcdBottom').textContent = alarm ? alarm.floor + ' · ' + alarm.room : s?.done ? 'Anlage in Ruhe' : 'Übung auswählen und starten';
   $('prev').disabled = !live || s.index === 0;
   $('next').disabled = !live || s.index === s.data.alarms.length - 1;
-  $('ue').className = 'lamp ' + (live ? 'red' : 'off');
-  $('ak').className = 'lamp ' + (live && s.muted ? 'amber' : 'off');
-  $('silence').disabled = !live;
-  $('silence').textContent = live && s.muted ? 'Akustische Signale ein' : 'Akustische Signale ab';
+  const transmitted = Boolean(live && s.transmitted);
+  $('ue').className = 'lamp ' + (transmitted ? 'red' : 'off');
+  $('ue').setAttribute('aria-label', transmitted ? 'ÜE ausgelöst' : 'ÜE nicht ausgelöst');
+  $('reset').classList.toggle('alarm', live);
+  for (const [id,key] of [['silence','muted'],['controlsOff','controlsOff'],['ueOff','ueOff']]) {
+    $(id).disabled = !live;
+    $(id).setAttribute('aria-pressed', String(Boolean(live && s[key])));
+  }
+  $('ueTest').disabled = !live || s.ueOff;
   $('reset').disabled = !live;
   $('restart').disabled = !s;
   $('cards').disabled = !live || s.assessed;
@@ -140,7 +159,7 @@ function start(index) {
   const data = scenarios[index];
   exercise = {
     scenario:index, data, index:0, cards:[...data.alarms,data.distractor],
-    inspected:new Set(), muted:false, assessed:false, approved:false, done:false,
+    inspected:new Set(), muted:false, controlsOff:false, ueOff:false, transmitted:true, assessed:false, approved:false, done:false,
     wrongCards:0, wrongAnswers:0, earlyResets:0
   };
   $('scenario').selectedIndex = index;
@@ -171,6 +190,27 @@ $('silence').onclick = () => {
   $('panelFeedback').textContent = text;
   appendLog(text);
   render();
+};
+$('controlsOff').onclick = () => {
+  exercise.controlsOff = !exercise.controlsOff;
+  const message = exercise.controlsOff ? 'Brandfall-Steuerungen simuliert abgeschaltet.' : 'Brandfall-Steuerungen simuliert eingeschaltet.';
+  $('panelFeedback').textContent = message;
+  appendLog(message);
+  render();
+};
+$('ueOff').onclick = () => {
+  exercise.ueOff = !exercise.ueOff;
+  const message = exercise.ueOff
+    ? 'ÜE simuliert abgeschaltet. Die Alarmübertragung ist bereits erfolgt.'
+    : 'ÜE simuliert wieder eingeschaltet.';
+  $('panelFeedback').textContent = message;
+  appendLog(message);
+  render();
+};
+$('ueTest').onclick = () => {
+  const message = 'ÜE-Prüfung simuliert. Die Anlage meldet eine erfolgreiche Übertragung.';
+  $('panelFeedback').textContent = message;
+  appendLog(message);
 };
 $('inspect').onclick = () => {
   const alarm = exercise.data.alarms[exercise.index];
