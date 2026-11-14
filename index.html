@@ -20,6 +20,9 @@
 .fat-indicators{display:grid;align-content:center;gap:8px}.fat-indicators .lamp{font-size:clamp(9px,1.5vw,12px);gap:4px}.fat-indicators .lamp:before{width:7px;height:7px}.fat-indicators .lamp:not(.off):before{box-shadow:0 0 7px currentColor}
 .fat-keyboard{display:flex;justify-content:space-between;align-items:end;gap:5px;margin-top:8px}.fat-arrows,.fat-actions{display:flex;gap:4px;flex-wrap:wrap}
 .membrane{min-width:44px;min-height:44px;padding:3px 5px;border:1px solid #aaa398;border-radius:4px;background:linear-gradient(#e7e1d3,#bdb7aa);color:#191919;font-size:clamp(9px,1.4vw,12px);box-shadow:0 2px 3px #000}.membrane:hover:not(:disabled){background:#fff1d4;color:#191919}.membrane:active:not(:disabled){box-shadow:inset 0 1px 4px #0008}.ue-number{display:table;background:#d9d7cb;color:#171717;border-radius:2px;padding:1px 4px;margin-top:4px;font:10px ui-monospace,monospace}
+
+.audio-panel{margin-top:12px}.audio-panel summary{cursor:pointer;font-weight:650;color:var(--text)}
+.audio-panel #audioStatus{margin-top:7px}.audio-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:12px 0}.audio-inputs label{display:grid;gap:5px;font-size:14px}.audio-inputs input{max-width:100%;font:inherit}
 </style>
 </head>
 <body>
@@ -29,6 +32,18 @@
 <label><span class="label">Übungslage</span><select id="scenario"><option>01 · Pflegezentrum</option><option>02 · Verwaltungsgebäude</option><option>03 · Logistikhalle</option></select></label>
 <button id="start" class="action">Übung starten</button><button id="restart" disabled>Neu starten</button><button id="sound" type="button" aria-pressed="true">Ton an</button>
 </section>
+<section class="panel audio-panel" aria-label="Tonquellen">
+<details><summary>Tonquellen</summary>
+<div class="audio-inputs">
+<label>FAT-Summer<input id="fatAudioFile" type="file" accept="audio/*,.m4a,.mp3,.wav"></label>
+<label>Gebäudealarm<input id="buildingAudioFile" type="file" accept="audio/*,.m4a,.mp3,.wav"></label>
+</div>
+<p class="muted compact">Der Gebäudealarm nutzt ab Werk die <a href="https://www.pfannenberg.com/en/signaling-technologies/audible-signaling/sounders/pa-1/" target="_blank" rel="noopener">DIN-Hörprobe (Nr. 2) von Pfannenberg</a>. Für den FAT-Summer kannst du eine eigene Aufnahme laden. Geladene Dateien bleiben auf diesem Gerät und gelten bis zum Neuladen der Seite.</p>
+</details>
+<p id="audioStatus" class="muted compact" role="status">Gebäudealarm: Herstellerhörprobe · FAT-Summer: Aufnahme fehlt</p>
+</section>
+<audio id="fatAudio" preload="none" loop></audio>
+<audio id="buildingAudio" preload="none" loop src="https://www.pfannenberg.com/fileadmin/Redakteur/Products/Downloads/AudioTests/wav/P_Sawtooth.wav"></audio>
 <div class="layout">
 <div class="stack">
 <section class="panel instrument">
@@ -92,7 +107,7 @@
 <section id="result" class="panel gap score" aria-live="polite" hidden><h2>Übung abgeschlossen</h2><p id="summary"></p></section>
 </div>
 </div>
-<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und schematische Laufkarten. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. Der FAT-Summer und die Gebäudeakustik sind getrennt hörbar. Synthetische Übungstöne. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p></details></footer>
+<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und schematische Laufkarten. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. FAT-Summer und Gebäudealarm werden getrennt gesteuert. Die Tonquellen findest du unter „Tonquellen“. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p></details></footer>
 </main>
 <script>
 'use strict';
@@ -123,62 +138,60 @@ const scenarios = [
 
 let exercise = null;
 let soundOn = true;
-let audioContext = null;
-let channels = [];
+const audioTracks = [
+  {player:$('fatAudio'), input:$('fatAudioFile'), label:'FAT-Summer', name:'Aufnahme fehlt', off:'fatQuiet'},
+  {player:$('buildingAudio'), input:$('buildingAudioFile'), label:'Gebäudealarm', name:'Herstellerhörprobe', off:'muted'}
+];
+function showAudioStatus() {
+  $('audioStatus').textContent = [...audioTracks].reverse()
+    .map(track => track.label + ': ' + (track.error || track.name)).join(' · ');
+}
 function syncAudio() {
-  if (channels.length !== 2) return;
   const live = Boolean(exercise && !exercise.done && soundOn);
-  const now = audioContext.currentTime;
-  for (const [i, active] of [live && !exercise.fatQuiet, live && !exercise.muted].entries()) {
-    const output = channels[i].output.gain;
-    // Set the gain of each independently controlled sound source.
-    output.cancelScheduledValues(now);
-    output.setTargetAtTime(active ? 1 : 0, now, .025);
+  for (const track of audioTracks) {
+    const player = track.player;
+    if (!live || exercise[track.off]) {
+      player.pause();
+      continue;
+    }
+    if (!player.getAttribute('src') || !player.paused || track.error) continue;
+    const src = player.src;
+    player.play().catch(error => {
+      if (error.name === 'AbortError' || player.src !== src || player.error) return;
+      track.error = error.name === 'NotAllowedError' ?
+        'Wiedergabe blockiert. Ton erneut einschalten.' :
+        'Nicht abspielbar. MP3, M4A oder WAV laden.';
+      showAudioStatus();
+    });
   }
 }
-function prepareAudio() {
-  if (!soundOn) return;
-  const Audio = window.AudioContext || window.webkitAudioContext;
-  if (!Audio) {
-    $('sound').textContent = 'Ton nicht verfügbar';
-    $('sound').disabled = true;
-    return;
-  }
-  try {
-    if (!audioContext) {
-      audioContext = new Audio();
-      // An LFO gives each synthetic sound a distinct pulse pattern.
-      channels = [[1850, 2.1, .026, 'square'], [485, 1.1, .055, 'sine']].map(([pitch, rate, volume, waveform]) => {
-        const source = audioContext.createOscillator();
-        const pulse = audioContext.createOscillator();
-        const depth = audioContext.createGain();
-        const envelope = audioContext.createGain();
-        const output = audioContext.createGain();
-        source.frequency.value = pitch;
-        source.type = waveform;
-        pulse.type = 'square';
-        pulse.frequency.value = rate;
-        depth.gain.value = volume / 2;
-        envelope.gain.value = volume / 2;
-        output.gain.value = 0;
-        pulse.connect(depth).connect(envelope.gain);
-        source.connect(envelope).connect(output).connect(audioContext.destination);
-        source.start();
-        pulse.start();
-        return {output};
-      });
-    }
-    if (audioContext.state !== 'running') audioContext.resume().catch(() => {});
-  } catch {
-    $('sound').textContent = 'Ton nicht verfügbar';
-    $('sound').disabled = true;
-  }
+for (const track of audioTracks) {
+  track.player.addEventListener('error', () => {
+    track.error = track.url ? 'Datei nicht abspielbar. MP3, M4A oder WAV laden.' :
+      'Hörprobe nicht erreichbar. Datei laden.';
+    showAudioStatus();
+  });
+  track.input.addEventListener('change', () => {
+    const file = track.input.files[0];
+    if (!file) return;
+    track.player.pause();
+    if (track.url) URL.revokeObjectURL(track.url);
+    track.url = URL.createObjectURL(file);
+    track.player.src = track.url;
+    track.name = file.name;
+    track.error = '';
+    showAudioStatus();
+    syncAudio();
+  });
 }
 $('sound').onclick = () => {
   soundOn = !soundOn;
   $('sound').setAttribute('aria-pressed', String(soundOn));
   $('sound').textContent = soundOn ? 'Ton an' : 'Ton aus';
-  prepareAudio();
+  if (soundOn) {
+    for (const track of audioTracks) track.error = '';
+    showAudioStatus();
+  }
   syncAudio();
 };
 function formatAlarm(alarm) {
@@ -263,7 +276,12 @@ function drawCard() {
 }
 
 function start(index) {
-  prepareAudio();
+  for (const track of audioTracks) {
+    track.player.pause();
+    track.player.currentTime = 0;
+    track.error = '';
+  }
+  showAudioStatus();
   const data = scenarios[index];
   exercise = {
     scenario:index, data, index:0, cards:[...data.alarms,data.distractor],
