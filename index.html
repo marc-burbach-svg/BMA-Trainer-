@@ -374,6 +374,7 @@
 <label class="gap">Szenario / Objekt<select id="cloudObject"></select></label>
 <button id="cloudStart">Alle Melder des Szenarios auslösen</button>
 <label class="gap">Meldergruppe / Melder<select id="cloudLine"></select></label>
+<p class="muted compact">Die Übungsmelder 041/01–044/01 können einzeln zusätzlich ausgelöst werden. Handdruckmelder 041/01 und 042/01 werden am Gerät zurückgestellt.</p>
 <div class="scenario-actions"><button id="cloudRaise" class="danger">Auslösen</button><button id="cloudClear">Auslösung aufheben</button></div>
 <button id="cloudClearAll">Alle Auslösungen aufheben</button>
 <div class="gap">
@@ -1096,10 +1097,13 @@ function renderPeripherals(session, live) {
     $('state'+key).textContent = active ? 'Ausgelöst' : open ? 'Klappe offen' : 'Bereit';
     $('state'+key).classList.toggle('active',active);
   }
-  const smokeAlarm = session.data.alarms.includes(smokePoint);
+  const smokeAlarm = session.data.alarms.some(isAutomaticDetector);
   $('smokeLed').classList.toggle('is-active',smokeAlarm);
   $('smokeState').classList.toggle('active',smokeAlarm);
-  $('smokeState').textContent = session.smoke ? 'Rauch erkannt' : smokeAlarm ? 'Alarm gespeichert' : 'Bereit';
+  const automaticActive = session.data.alarms.some(alarm =>
+    isAutomaticDetector(alarm) && session.activeLines.has(lineKey(alarm)));
+  $('smokeState').textContent = session.smoke ? 'Rauch erkannt' :
+    automaticActive ? 'Automatischer Melder ausgelöst' : smokeAlarm ? 'Alarm gespeichert' : 'Bereit';
   $('smokeToggle').textContent = session.smoke ? 'Rauch entfernen' : 'Rauch simulieren';
   $('smokeToggle').setAttribute('aria-pressed',String(session.smoke));
   $('beaconLens').classList.toggle('is-active',live);
@@ -1322,7 +1326,7 @@ function cloudControls() {
   const key = selected && lineKey(selected);
   $('cloudStart').disabled = !ready || live || !cloudObject();
   $('cloudRaise').disabled = !ready || !key || room.active.includes(key);
-  $('cloudClear').disabled = !ready || !key || !room.active.includes(key);
+  $('cloudClear').disabled = !ready || !key || protectedCallKeys.has(key) || !room.active.includes(key);
   $('cloudClearAll').disabled = !ready || !room.active.some(id => !protectedCallKeys.has(id));
   $('cloudApprove').disabled = !ready || !readyForRelease(room) || room.approved;
   $('cloudClearAll').textContent = room?.active.some(id => protectedCallKeys.has(id)) ?
@@ -1352,10 +1356,7 @@ function updateSharedPanel() {
   const r = cloud.state;
   if (instructor() && r?.alarms.length && cloudObject()?.name !== r.object) {
     const choice = [...$('cloudObject').options].find(option => option.text === r.object);
-    if (choice) {
-      $('cloudObject').value = choice.value;
-      populateCloudLines();
-    }
+    if (choice) $('cloudObject').value = choice.value;
   }
   const previous = exercise;
   const next = newFreeSession();
@@ -1367,7 +1368,8 @@ function updateSharedPanel() {
   }
   exercise = next;
   render();
-  cloudControls();
+  if (instructor()) populateCloudLines();
+  else cloudControls();
 }
 
 function openShared() {
@@ -1421,8 +1423,17 @@ function cloudObject() {
   const object = objects.find(item => item.id === value);
   return object && {name:object.name, lines:object.lines, all:object.lines};
 }
+function cloudLines() {
+  const object = cloudObject();
+  const room = cloud.state;
+  const sameObject = !room?.object || room.object === object?.name;
+  const lines = [...(sameObject ? object?.lines || [] : []), ...(room?.alarms || []),
+    ...callPoints, smokePoint, sprinklerLine];
+  return [...new Map(lines.map(line => [lineKey(line), line])).values()];
+}
 function selectedCloudLine() {
-  return cloudObject()?.lines.find(line => lineKey(line) === $('cloudLine').value);
+  const id = $('cloudLine').value;
+  return cloudLines().find(line => lineKey(line) === id);
 }
 function populateCloudObjects() {
   const value = $('cloudObject').value;
@@ -1434,8 +1445,8 @@ function populateCloudObjects() {
 }
 function populateCloudLines() {
   const previous = $('cloudLine').value;
-  const lines = cloudObject()?.lines || [];
-  $('cloudLine').replaceChildren(...lines.map(line => new Option(lineKey(line) + ' · ' + line.room,lineKey(line))));
+  const lines = cloudLines();
+  $('cloudLine').replaceChildren(...lines.map(line => new Option(lineKey(line) + ' · ' + line.type + ' · ' + line.room,lineKey(line))));
   if (lines.some(line => lineKey(line) === previous)) $('cloudLine').value = previous;
   cloudControls();
 }
@@ -1502,12 +1513,17 @@ $('cloudStart').onclick = () => {
 $('cloudRaise').onclick = () => {
   const line = selectedCloudLine();
   const object = cloudObject();
-  if (line && object && instructor()) changeRoom(room => raiseRoom(room,object.name,[line]));
+  if (line && instructor()) {
+    const name = cloud.state?.object || object?.name;
+    if (name) changeRoom(room => raiseRoom(room,name,[line]));
+  }
 };
 $('cloudClear').onclick = () => {
   const line = selectedCloudLine();
-  if (line && instructor()) changeRoom(room => ({...room, active:room.active.filter(key => key !== lineKey(line)),
-    event:'Auslösung aufgehoben · ' + lineKey(line)}));
+  if (!line || !instructor()) return;
+  const id = lineKey(line);
+  if (protectedCallKeys.has(id)) return;
+  changeRoom(room => ({...room, active:room.active.filter(key => key !== id),event:'Auslösung aufgehoben · ' + id}));
 };
 $('cloudClearAll').onclick = () => {
   if (instructor()) changeRoom(room => {
@@ -1778,7 +1794,6 @@ for (const id of ['routeChecked','areaChecked','causeChecked']) {
 }
 
 const sprinklerLine = {group:'044',number:'01',type:'Strömungswächter',floor:'EG',room:'Sprinklergruppe 1'};
-const suppressionObjects = new Set(['Logistikzentrum Ried','Tiefgarage Am Stadtgarten']);
 const brandControls = Object.assign(Object.create(null), {
   'Logistikzentrum Ried':'Brandschutztor geschlossen · Lüftung abgeschaltet',
   'Hotel am Park':'Aufzug ins EG gefahren · Brandschutztüren geschlossen',
@@ -1792,13 +1807,15 @@ function technologyName(session) {
 function isSprinkler(alarm) {
   return alarm.type === 'Strömungswächter';
 }
+function isAutomaticDetector(alarm) {
+  return alarm.type !== 'Handfeuermelder' && !isSprinkler(alarm);
+}
 function renderTechnology(prefix, session, live) {
   const sprinkler = session.data.alarms.some(isSprinkler);
   const room = mode === 'shared' ? cloud.state : null;
   const available = mode !== 'shared' || Boolean(room && cloud.connected && !cloud.pending && instructor());
   const sprinklerActive = room ? room.active.includes(lineKey(sprinklerLine)) : session.activeLines.has(lineKey(sprinklerLine));
-  const object = room?.object || cloudObject()?.name;
-  const supportsSprinkler = mode !== 'shared' || suppressionObjects.has(object);
+  const supportsSprinkler = mode !== 'shared' || Boolean(room?.object || cloudObject());
   $(prefix+'Spr').hidden = mode === 'shared' && (!instructor() || !supportsSprinkler);
   $(prefix+'Spr').disabled = !available || !supportsSprinkler;
   $(prefix+'Spr').textContent = sprinklerActive ? 'Wasserfluss beenden' : 'Sprinkler auslösen';
@@ -1836,7 +1853,7 @@ for (const [suffix,open] of [['Rwa',true],['RwaReset',false]]) {
 }
 $('cloudTechSpr').onclick = () => {
   const object = cloud.state?.object || cloudObject()?.name;
-  if (!instructor() || !suppressionObjects.has(object)) return;
+  if (!instructor() || !object) return;
   const key = lineKey(sprinklerLine);
   changeRoom(room => room.active.includes(key) ?
     {...room,active:room.active.filter(id => id !== key),event:'Sprinkler-Wasserfluss beendet'} :
@@ -1891,10 +1908,13 @@ function renderSharedDetectors(room, ready) {
   }
   const smokeKey = lineKey(smokePoint);
   const smoke = active.includes(smokeKey);
-  const stored = Boolean(room?.alarmKeys.includes(smokeKey));
+  const stored = Boolean(room?.alarms.some(isAutomaticDetector));
+  const automaticActive = Boolean(room?.alarms.some(alarm =>
+    isAutomaticDetector(alarm) && active.includes(lineKey(alarm))));
   $('sharedSmokeLed').classList.toggle('is-active',stored);
   $('sharedSmokeState').classList.toggle('active',stored);
-  $('sharedSmokeState').textContent = smoke ? 'Rauch erkannt' : stored ? 'Alarm gespeichert' : 'Bereit';
+  $('sharedSmokeState').textContent = smoke ? 'Rauch erkannt' :
+    automaticActive ? 'Automatischer Melder ausgelöst' : stored ? 'Alarm gespeichert' : 'Bereit';
   $('sharedSmokeToggle').hidden = !instructor();
   $('sharedSmokeToggle').disabled = !ready;
   $('sharedSmokeToggle').textContent = smoke ? 'Rauch entfernen' : 'Rauch simulieren';
