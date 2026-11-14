@@ -87,6 +87,8 @@
 .rwa-key{width:98px;height:75px;border:4px solid #a64512;background:#f38b39;color:#21160d;font-size:12px;box-shadow:inset 0 0 0 1px #ffbe84}.rwa-key span{display:block;background:#fff2de;color:#161616;margin-bottom:4px;font-size:16px}.rwa-key:hover:not(:disabled){background:#ffad66}.rwa-key[aria-pressed=true]{opacity:1;box-shadow:0 0 0 2px #ffc980}.rwa-key[aria-pressed=true] span{background:#ffe099}
 .sprinkler{position:relative;width:78px;height:75px}.sprinkler i,.sprinkler b{position:absolute;left:50%;transform:translateX(-50%)}.sprinkler i{width:30px;height:39px;top:7px;border:4px solid #bc9661;border-radius:4px 4px 46% 46%;background:linear-gradient(90deg,transparent 43%,#db433c 43% 57%,transparent 57%)}.sprinkler b{top:43px;width:39px;height:6px;border-radius:4px;background:#bfa078}.sprinkler span{display:none;position:absolute;top:49px;left:5px;right:5px;bottom:0;background:repeating-linear-gradient(80deg,transparent 0 7px,#85d7ff 8px 9px);clip-path:polygon(41% 0,59% 0,100% 100%,0 100%)}.flowing .sprinkler span{display:block}.flowing .sprinkler i{background:none}
 #ueTestFlag:empty,#guidedBfs:empty{display:none}
+
+.rwa-key{width:100px;height:100px;padding:5px;background:#ed7f28;border:4px solid #a74815;box-shadow:inset 0 0 0 1px #ffb172;border-radius:3px;position:relative}.rwa-key::before{content:"";position:absolute;left:4px;top:51%;width:9px;height:13px;background:#e67522;border:1px solid #a65321;border-radius:2px}.rwa-key .rwa-label{margin:0 auto 5px;background:none;border:1px solid #6b3317;font:700 10px/1.35 system-ui;color:#382210}.rwa-key .rwa-inset{margin:0 auto;padding:7px 3px 5px;width:54px;background:#cfccc2;border:1px solid #a19b8a;border-radius:2px}.rwa-key .rwa-lamps{display:flex;justify-content:space-around;background:none;margin:0 0 5px}.rwa-lamps i{background:#43894a;width:6px;height:6px;border-radius:50%}.rwa-lamps i:nth-child(2){background:#8d3834}.rwa-lamps i:nth-child(3){background:#9d8843}.rwa-key[aria-pressed=true] .rwa-lamps i:nth-child(2){background:#ff3629;box-shadow:0 0 6px #e73223}.rwa-key .rwa-switch{width:17px;height:15px;margin:0 auto;background:linear-gradient(#c24436,#9b2d24);border:1px solid #762b22;border-radius:2px}.sprinkler{width:99px;height:100px}.sprinkler svg{width:100%;height:auto;display:block}.sprinkler span{top:62px;z-index:1}.flowing .sprinkler-bulb{visibility:hidden}
 </style>
 </head>
 <body>
@@ -245,13 +247,19 @@
 <div class="tech-grid">
 <div class="tech-unit">
 <h3>Sprinkleranlage</h3>
-<div class="sprinkler" aria-hidden="true"><i></i><b></b><span></span></div>
+<div class="sprinkler" aria-hidden="true">
+<svg viewBox="0 0 104 82" focusable="false"><defs><linearGradient id="metalfreeTech"><stop stop-color="#626a6d"/><stop offset=".45" stop-color="#f2f2ed"/><stop offset=".73" stop-color="#9da0a0"/><stop offset="1" stop-color="#585f63"/></linearGradient></defs>
+<ellipse cx="52" cy="13" rx="43" ry="10" fill="url(#metalfreeTech)" stroke="#555d60" stroke-width="2"/><ellipse cx="52" cy="17" rx="37" ry="7" fill="#9da3a4"/>
+<path d="M32 15L36 39 47 59H57L68 39 72 15" fill="none" stroke="url(#metalfreeTech)" stroke-width="8" stroke-linejoin="round"/>
+<rect class="sprinkler-bulb" x="48" y="19" width="8" height="30" rx="3" fill="#f05b24" stroke="#883a20"/>
+<path d="M44 51h16l-5 10h-6z" fill="#727671"/><ellipse cx="52" cy="62" rx="17" ry="4" fill="url(#metalfreeTech)" stroke="#797566"/>
+</svg><span></span></div>
 <p class="compact" id="freeTechSprState">Bereit</p>
 <button id="freeTechSpr" type="button">Sprinkler auslösen</button>
 </div>
 <div class="tech-unit">
 <h3>Rauch- und Wärmeabzug</h3>
-<button id="freeTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span aria-hidden="true">↑ ↑ ↑</span>Rauchabzug</button>
+<button id="freeTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span class="rwa-label" aria-hidden="true">RAUCHABZUG</span><span class="rwa-inset" aria-hidden="true"><span class="rwa-lamps"><i></i><i></i><i></i></span><span class="rwa-switch"></span></span></button>
 <p class="compact" id="freeTechRwaState">Geschlossen</p>
 <button id="freeTechRwaReset" type="button" disabled>RWA zurückstellen</button>
 </div>
@@ -278,18 +286,72 @@
 <div class="tech-grid">
 <div class="tech-unit">
 <h3>Sprinkleranlage</h3>
-<div class="sprinkler" aria-hidden="true"><i></i><b></b><span></span></div>
+<div class="sprinkler" aria-hidden="true">
+<svg viewBox="0 0 104 82" focusable="false"><defs><linearGradient id="metalcloudTech"><stop stop-color="#626a6d"/><stop offset=".45" stop-color="#f2f2ed"/><stop offset=".73" stop-color="#9da0a0"/><stop offset="1" stop-color="#585f63"/></linearGradient></defs>
+<ellipse cx="52" cy="13" rx="43" ry="10" fill="url(#metalcloudTech)" stroke="#555d60" stroke-width="2"/><ellipse cx="52" cy="17" rx="37" ry="7" fill="#9da3a4"/>
+<path d="M32 15L36 39 47 59H57L68 39 72 15" fill="none" stroke="url(#metalcloudTech)" stroke-width="8" stroke-linejoin="round"/>
+<rect class="sprinkler-bulb" x="48" y="19" width="8" height="30" rx="3" fill="#f05b24" stroke="#883a20"/>
+<path d="M44 51h16l-5 10h-6z" fill="#727671"/><ellipse cx="52" cy="62" rx="17" ry="4" fill="url(#metalcloudTech)" stroke="#797566"/>
+</svg><span></span></div>
 <p class="compact" id="cloudTechSprState">Bereit</p>
 <button id="cloudTechSpr" type="button">Sprinkler auslösen</button>
 </div>
 <div class="tech-unit">
 <h3>Rauch- und Wärmeabzug</h3>
-<button id="cloudTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span aria-hidden="true">↑ ↑ ↑</span>Rauchabzug</button>
+<button id="cloudTechRwa" class="rwa-key" type="button" aria-pressed="false" aria-label="Rauchabzug öffnen"><span class="rwa-label" aria-hidden="true">RAUCHABZUG</span><span class="rwa-inset" aria-hidden="true"><span class="rwa-lamps"><i></i><i></i><i></i></span><span class="rwa-switch"></span></span></button>
 <p class="compact" id="cloudTechRwaState">Geschlossen</p>
 <button id="cloudTechRwaReset" type="button" disabled>RWA zurückstellen</button>
 </div>
 </div>
 <p id="cloudTechBfs" class="muted compact" role="status"></p>
+</section>
+<section class="panel gap">
+<h2>Melder im Übungsraum</h2>
+<p class="muted compact">Der Instruktor löst die Melder aus. Stellt ausgelöste Handdruckmelder am Gerät zurück: Klappe öffnen, Rückstellhebel ↺ drücken. Die Meldung am FAT bleibt bis zur BMZ-Rückstellung gespeichert.</p>
+<div class="callpoints"><div class="call-station">
+<div id="sharedHousingA" class="manual-housing">
+<div class="manual-base">
+<span class="manual-terminal" aria-hidden="true"></span>
+<button id="sharedResetA" class="manual-reset" aria-label="Handdruckmelder 041/01 zurückstellen" title="Rückstellhebel" hidden disabled>↺</button>
+<span class="manual-terminal" aria-hidden="true"></span>
+</div>
+<div id="sharedCoverA" class="manual-cover">
+<svg class="call-emblem" viewBox="0 0 32 30" aria-hidden="true"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<button id="sharedCallA" class="manual-glass" aria-label="Handdruckmelder 041/01 auslösen" aria-pressed="false">
+<span class="manual-led" aria-hidden="true"></span>
+<svg viewBox="0 0 90 58" aria-hidden="true"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="10" fill="currentColor"/><path d="M42 52l-7-8c-2-3 1-5 4-2l3 3V33c0-4 4-4 4 0v7c0-3 4-3 4 0 0-2 4-2 4 1 1-2 4-1 4 2v5l-4 6H43Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+</button>
+</div>
+<button id="sharedDoorA" class="manual-lock" aria-label="Klappe am Handdruckmelder 041/01 öffnen" aria-expanded="false" aria-controls="sharedResetA" title="Klappe öffnen"></button>
+</div>
+<strong>EG · Haupteingang</strong><small class="muted">041/01</small>
+<span id="sharedStateA" class="peripheral-state">Bereit</span>
+<button id="sharedDoorToggleA" class="compact" aria-expanded="false" aria-controls="sharedResetA">Klappe öffnen</button>
+</div><div class="call-station">
+<div id="sharedHousingB" class="manual-housing">
+<div class="manual-base">
+<span class="manual-terminal" aria-hidden="true"></span>
+<button id="sharedResetB" class="manual-reset" aria-label="Handdruckmelder 042/01 zurückstellen" title="Rückstellhebel" hidden disabled>↺</button>
+<span class="manual-terminal" aria-hidden="true"></span>
+</div>
+<div id="sharedCoverB" class="manual-cover">
+<svg class="call-emblem" viewBox="0 0 32 30" aria-hidden="true"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<button id="sharedCallB" class="manual-glass" aria-label="Handdruckmelder 042/01 auslösen" aria-pressed="false">
+<span class="manual-led" aria-hidden="true"></span>
+<svg viewBox="0 0 90 58" aria-hidden="true"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="10" fill="currentColor"/><path d="M42 52l-7-8c-2-3 1-5 4-2l3 3V33c0-4 4-4 4 0v7c0-3 4-3 4 0 0-2 4-2 4 1 1-2 4-1 4 2v5l-4 6H43Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+</button>
+</div>
+<button id="sharedDoorB" class="manual-lock" aria-label="Klappe am Handdruckmelder 042/01 öffnen" aria-expanded="false" aria-controls="sharedResetB" title="Klappe öffnen"></button>
+</div>
+<strong>1. OG · Treppenraum</strong><small class="muted">042/01</small>
+<span id="sharedStateB" class="peripheral-state">Bereit</span>
+<button id="sharedDoorToggleB" class="compact" aria-expanded="false" aria-controls="sharedResetB">Klappe öffnen</button>
+</div></div>
+<div class="peripheral"><h2>BMA-Rauchmelder</h2><small class="muted">1. OG · Flur · 043/01</small>
+<div class="detector" aria-hidden="true"><div class="detector-top"></div><div class="detector-vents"></div><div class="detector-cap"><span id="sharedSmokeLed"></span></div></div>
+<p id="sharedSmokeState" class="peripheral-state" role="status">Bereit</p>
+<button id="sharedSmokeToggle" class="compact" aria-pressed="false">Rauch simulieren</button>
+</div>
 </section>
 <section class="panel gap" id="walkPanel" hidden>
 <h2>Erkundung im Übungsraum</h2>
@@ -1261,8 +1323,10 @@ function cloudControls() {
   $('cloudStart').disabled = !ready || live || !cloudObject();
   $('cloudRaise').disabled = !ready || !key || room.active.includes(key);
   $('cloudClear').disabled = !ready || !key || !room.active.includes(key);
-  $('cloudClearAll').disabled = !ready || !room.active.length;
+  $('cloudClearAll').disabled = !ready || !room.active.some(id => !protectedCallKeys.has(id));
   $('cloudApprove').disabled = !ready || !readyForRelease(room) || room.approved;
+  $('cloudClearAll').textContent = room?.active.some(id => protectedCallKeys.has(id)) ?
+    'Übrige Auslösungen aufheben' : 'Alle Auslösungen aufheben';
   $('cloudObject').disabled = !ready || live;
   $('cloudLine').disabled = !ready || !cloudObject();
   $('cloudObjectName').textContent = room?.object || 'Übungsanlage';
@@ -1273,6 +1337,7 @@ function cloudControls() {
   if (mode !== 'shared') return;
   renderWalk(room,ready,live);
   renderTechnology('cloudTech',exercise || newFreeSession(),live);
+  renderSharedDetectors(room,ready);
   $('reset').disabled = !ready || !room.approved || !live;
   for (const [id,field] of [['buzzer','fatQuiet'],['silence','muted'],['controlsOff','controlsOff'],['ueOff','ueOff'],['ueTest','ueTest']]) {
     const blocked = field === 'fatQuiet' && (!live || room?.fatQuiet) ||
@@ -1445,7 +1510,12 @@ $('cloudClear').onclick = () => {
     event:'Auslösung aufgehoben · ' + lineKey(line)}));
 };
 $('cloudClearAll').onclick = () => {
-  if (instructor()) changeRoom(room => ({...room,active:[],event:'Alle Auslösungen aufgehoben'}));
+  if (instructor()) changeRoom(room => {
+    const active = room.active.filter(id => protectedCallKeys.has(id));
+    return {...room,active,event:active.length ?
+      'Übrige Auslösungen aufgehoben · Handdruckmelder am Gerät zurückstellen' :
+      'Alle Auslösungen aufgehoben'};
+  });
 };
 $('cloudApprove').onclick = () => {
   if (instructor()) changeRoom(room => {
@@ -1481,6 +1551,7 @@ $('reset').onclick = () => {
 };
 
 function disconnectRoom() {
+  sharedDoors.clear();
   cloud.epoch++;
   cloud.stopRoom?.();
   cloud.stopRoom = null;
@@ -1796,6 +1867,72 @@ $('ueTest').onclick = () => {
     exercise.ueUntil = Date.now()+2000;
     report(event);
     render();
+  }
+};
+
+const sharedDoors = new Set();
+const protectedCallKeys = new Set(callPoints.map(lineKey));
+
+function renderSharedDetectors(room, ready) {
+  const active = room?.active || [];
+  for (const [i,key] of ['A','B'].entries()) {
+    const latched = active.includes(lineKey(callPoints[i]));
+    const open = sharedDoors.has(i);
+    $('sharedHousing'+key).classList.toggle('is-open',open);
+    $('sharedCall'+key).disabled = !ready || !instructor() || latched || open;
+    $('sharedCall'+key).setAttribute('aria-pressed',String(latched));
+    $('sharedReset'+key).hidden = !open;
+    $('sharedReset'+key).disabled = !ready || !open || !latched;
+    $('sharedDoor'+key).disabled = open;
+    for (const id of ['sharedDoor','sharedDoorToggle']) $(id+key).setAttribute('aria-expanded',String(open));
+    $('sharedDoorToggle'+key).textContent = open ? 'Klappe schließen' : 'Klappe öffnen';
+    $('sharedState'+key).textContent = latched ? 'Ausgelöst' : open ? 'Klappe offen' : 'Bereit';
+    $('sharedState'+key).classList.toggle('active',latched);
+  }
+  const smokeKey = lineKey(smokePoint);
+  const smoke = active.includes(smokeKey);
+  const stored = Boolean(room?.alarmKeys.includes(smokeKey));
+  $('sharedSmokeLed').classList.toggle('is-active',stored);
+  $('sharedSmokeState').classList.toggle('active',stored);
+  $('sharedSmokeState').textContent = smoke ? 'Rauch erkannt' : stored ? 'Alarm gespeichert' : 'Bereit';
+  $('sharedSmokeToggle').hidden = !instructor();
+  $('sharedSmokeToggle').disabled = !ready;
+  $('sharedSmokeToggle').textContent = smoke ? 'Rauch entfernen' : 'Rauch simulieren';
+  $('sharedSmokeToggle').setAttribute('aria-pressed',String(smoke));
+}
+
+function raiseSharedDetector(line) {
+  if (!instructor()) return;
+  const object = cloud.state?.object || cloudObject()?.name || 'Übungsanlage';
+  unlockAudio();
+  changeRoom(room => raiseRoom(room,object,[line]));
+}
+for (const [i,key] of ['A','B'].entries()) {
+  const detector = callPoints[i];
+  $('sharedCall'+key).onclick = () => raiseSharedDetector(detector);
+  const toggle = () => {
+    if (!sharedDoors.delete(i)) sharedDoors.add(i);
+    cloudControls();
+    $('sharedDoorToggle'+key).focus();
+  };
+  $('sharedDoor'+key).onclick = $('sharedDoorToggle'+key).onclick = toggle;
+  $('sharedReset'+key).onclick = () => {
+    if (!sharedDoors.has(i)) return;
+    const id = lineKey(detector);
+    changeRoom(room => {
+      if (!room.active.includes(id)) throw Error('Der Handdruckmelder ist bereits zurückgestellt.');
+      return {...room,active:room.active.filter(line => line !== id),event:'Handdruckmelder zurückgestellt · '+id};
+    });
+    $('sharedDoorToggle'+key).focus();
+  };
+}
+$('sharedSmokeToggle').onclick = () => {
+  if (!instructor() || !cloud.state) return;
+  const id = lineKey(smokePoint);
+  if (cloud.state.active.includes(id)) {
+    changeRoom(room => ({...room,active:room.active.filter(line => line !== id),event:'Rauch entfernt · '+id}));
+  } else {
+    raiseSharedDetector(smokePoint);
   }
 };
 
