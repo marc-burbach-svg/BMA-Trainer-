@@ -64,6 +64,14 @@
 .panel-key:disabled{opacity:1;filter:brightness(.77)}.panel-key:hover:not(:disabled){background:#fff6da}.panel-key:active:not(:disabled){box-shadow:inset 0 2px 5px #0007}
 .panel-key.cursor-lit,.panel-key[aria-pressed=true]{background:#f2ce79;box-shadow:inset 0 0 6px #f6a53b}
 .panel-key.cursor-pulse{background:#fff0a2;box-shadow:inset 0 0 8px #ffb831,0 0 10px #ffb831}
+
+.manual-housing{position:relative;width:min(100%,124px);aspect-ratio:1;background:#59191a;border:3px solid #790e13;border-radius:5px;margin:3px 0 6px;perspective:360px;box-shadow:0 5px 0 #411416,0 8px 14px #0007}.manual-base{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(155deg,#b32123,#7e1719);border:5px solid #641518;border-radius:2px}.manual-terminal{width:58%;height:6px;background:repeating-linear-gradient(90deg,#a1643a 0 5px,#2d2120 5px 9px);border-radius:2px}.manual-reset{width:44px;height:44px;padding:0;font-size:22px;color:#181717;background:#ebded0;border-color:#4b2224}.manual-reset:hover:not(:disabled){background:#fff0d9}
+.manual-cover{position:absolute;inset:0;background:linear-gradient(145deg,#c72e28,#a4171b 66%,#8e1217);border:3px solid #b72524;border-radius:3px;box-shadow:inset 0 0 0 1px #ff877b50;transform-origin:right center;transition:transform .32s ease;z-index:2}.manual-housing.is-open .manual-cover{transform:rotateY(96deg);pointer-events:none}.manual-cover .call-emblem{top:6%;left:38%;width:25%;height:24%}.manual-glass{position:absolute;left:23%;top:31%;width:63%;height:57%;padding:3px;display:grid;place-items:center;background:linear-gradient(135deg,#eee9de,#fff9ed);color:#353534;border:2px solid #8d2525;border-radius:1px;box-shadow:inset 0 2px 6px #0004}.manual-glass:hover:not(:disabled){background:#fff7eb}.manual-glass:disabled{opacity:1}.manual-glass svg{width:100%;max-height:100%;display:block}.manual-led{position:absolute;left:12%;top:12%;width:7px;height:7px;background:#723438;border-radius:50%}.manual-glass[aria-pressed=true] .manual-led{background:#ff6055;box-shadow:0 0 8px #ff423b}.manual-lock{position:absolute;z-index:3;left:1%;top:46%;width:25px;height:28px;min-height:0;border-radius:50%;padding:0;background:#ad2020;border:1px solid #8d1314;box-shadow:0 1px 3px #571317}.manual-lock:hover:not(:disabled){background:#e0473d}.manual-housing.is-open .manual-lock{visibility:hidden}
+.peripherals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.peripheral{display:grid;justify-items:center;align-content:start;text-align:center;gap:5px}.peripheral h2{font-size:16px}.peripheral-state{min-height:20px;font-size:13px;color:var(--muted)}.peripheral-state.active{color:#ff9188;font-weight:700}.detector,.beacon{width:94px;height:82px;position:relative;margin:4px auto}.detector-top,.detector-vents,.detector-cap{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%}.detector-top{top:6px;width:92px;height:57px;background:linear-gradient(145deg,#fffdf1,#bcbcb0);border:2px solid #b9b9aa}.detector-vents{top:28px;width:81px;height:47px;background:repeating-conic-gradient(from -8deg,#efeddf 0 14deg,#25292a 14deg 70deg);border:2px solid #d6d2c5}.detector-cap{top:45px;width:58px;height:31px;background:radial-gradient(ellipse at 50% 24%,#f6f5ea,#aaa99f);border:2px solid #c2c0b4;display:grid;place-items:center}.detector-cap span{display:block;width:8px;height:8px;border-radius:50%;background:#775952}.detector-cap span.is-active{animation:detector-indicator 1s linear infinite}
+.beacon-base{position:absolute;z-index:1;left:2px;right:2px;top:5px;height:26px;border-radius:46% 46% 18% 18%;background:linear-gradient(130deg,#9e2729,#541218);border:2px solid #511519}.beacon-lens{position:absolute;left:2px;right:2px;top:18px;height:56px;border:2px solid #68151b;border-radius:25% 25% 44% 44%;background:repeating-linear-gradient(90deg,#680d16 0 4px,#8e171d 4px 7px,#75111a 7px 10px);box-shadow:inset 0 -10px 15px #420e16}.beacon-lens.is-active{animation:beacon-indicator 1.5s linear infinite}
+@keyframes detector-indicator{0%,16%{background:#ff483c;box-shadow:0 0 8px #ff493e}17%,100%{background:#775952;box-shadow:none}}
+@keyframes beacon-indicator{0%,10%{background:#ff4d40;box-shadow:inset 0 -8px 15px #a0211c,0 0 12px #ff5139}11%,100%{background-color:#741019}}
+@media(prefers-reduced-motion:reduce){.manual-cover{transition:none}.detector-cap span.is-active,.beacon-lens.is-active{animation:none;background:#de382e}}
 </style>
 </head>
 <body>
@@ -128,32 +136,59 @@
 <div id="freePanel" class="stack" hidden>
 <section class="panel gap">
 <div class="row"><h2>Handdruckmelder</h2><span class="label">Übungsanlage</span></div>
-<div class="callpoints">
-<div class="call-station">
-<button id="callA" class="callpoint" aria-label="Handfeuermelder EG · Haupteingang auslösen" aria-pressed="false">
-<span class="call-front" aria-hidden="true">
-<svg class="call-emblem" viewBox="0 0 32 30"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
-<span class="call-led"></span>
-<span class="call-glass"><svg viewBox="0 0 90 44"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="7" fill="currentColor"/></svg><span class="call-trip"></span></span>
-<span class="call-lock"></span>
-</span>
+<div class="callpoints"><div class="call-station">
+<div id="housingA" class="manual-housing">
+<div class="manual-base">
+<span class="manual-terminal" aria-hidden="true"></span>
+<button id="resetA" class="manual-reset" aria-label="Handdruckmelder 041/01 zurückstellen" title="Rückstellhebel" hidden disabled>↺</button>
+<span class="manual-terminal" aria-hidden="true"></span>
+</div>
+<div id="coverA" class="manual-cover">
+<svg class="call-emblem" viewBox="0 0 32 30" aria-hidden="true"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<button id="callA" class="manual-glass" aria-label="Handdruckmelder 041/01 auslösen" aria-pressed="false">
+<span class="manual-led" aria-hidden="true"></span>
+<svg viewBox="0 0 90 58" aria-hidden="true"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="10" fill="currentColor"/><path d="M42 52l-7-8c-2-3 1-5 4-2l3 3V33c0-4 4-4 4 0v7c0-3 4-3 4 0 0-2 4-2 4 1 1-2 4-1 4 2v5l-4 6H43Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
 </button>
-<span>EG · Haupteingang</span><small class="muted">041/01</small>
 </div>
-<div class="call-station">
-<button id="callB" class="callpoint" aria-label="Handfeuermelder 1. OG · Treppenraum auslösen" aria-pressed="false">
-<span class="call-front" aria-hidden="true">
-<svg class="call-emblem" viewBox="0 0 32 30"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
-<span class="call-led"></span>
-<span class="call-glass"><svg viewBox="0 0 90 44"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="7" fill="currentColor"/></svg><span class="call-trip"></span></span>
-<span class="call-lock"></span>
-</span>
+<button id="doorA" class="manual-lock" aria-label="Klappe am Handdruckmelder 041/01 öffnen" aria-expanded="false" aria-controls="resetA" title="Klappe öffnen"></button>
+</div>
+<strong>EG · Haupteingang</strong><small class="muted">041/01</small>
+<span id="stateA" class="peripheral-state">Bereit</span>
+<button id="doorToggleA" class="compact" aria-expanded="false" aria-controls="resetA">Klappe öffnen</button>
+</div><div class="call-station">
+<div id="housingB" class="manual-housing">
+<div class="manual-base">
+<span class="manual-terminal" aria-hidden="true"></span>
+<button id="resetB" class="manual-reset" aria-label="Handdruckmelder 042/01 zurückstellen" title="Rückstellhebel" hidden disabled>↺</button>
+<span class="manual-terminal" aria-hidden="true"></span>
+</div>
+<div id="coverB" class="manual-cover">
+<svg class="call-emblem" viewBox="0 0 32 30" aria-hidden="true"><path d="M2 14 16 3l14 11h-5v13H7V14Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24c-5 0-6-4-3-7 0 2 2 2 2 0l2-5c0 4 5 5 5 8 0 2-2 4-6 4Z" fill="currentColor"/></svg>
+<button id="callB" class="manual-glass" aria-label="Handdruckmelder 042/01 auslösen" aria-pressed="false">
+<span class="manual-led" aria-hidden="true"></span>
+<svg viewBox="0 0 90 58" aria-hidden="true"><path d="M8 16h15v-6l12 12-12 12v-6H8zm74 0H67v-6L55 22l12 12v-6h15z" fill="currentColor"/><circle cx="45" cy="22" r="10" fill="currentColor"/><path d="M42 52l-7-8c-2-3 1-5 4-2l3 3V33c0-4 4-4 4 0v7c0-3 4-3 4 0 0-2 4-2 4 1 1-2 4-1 4 2v5l-4 6H43Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
 </button>
-<span>1. OG · Treppenraum</span><small class="muted">042/01</small>
+</div>
+<button id="doorB" class="manual-lock" aria-label="Klappe am Handdruckmelder 042/01 öffnen" aria-expanded="false" aria-controls="resetB" title="Klappe öffnen"></button>
+</div>
+<strong>1. OG · Treppenraum</strong><small class="muted">042/01</small>
+<span id="stateB" class="peripheral-state">Bereit</span>
+<button id="doorToggleB" class="compact" aria-expanded="false" aria-controls="resetB">Klappe öffnen</button>
+</div></div>
+<p class="muted compact">Zum Auslösen auf das weiße Druckfeld drücken. Zum Rückstellen die Klappe des betroffenen Melders öffnen, den Rückstellhebel ↺ betätigen und anschließend die BMZ am FBF rückstellen.</p>
+</section>
+<section class="panel gap" aria-label="Automatischer Melder und Alarmierung">
+<div class="peripherals">
+<div class="peripheral"><h2>BMA-Rauchmelder</h2><small class="muted">1. OG · Flur · 043/01</small>
+<div class="detector" aria-hidden="true"><div class="detector-top"></div><div class="detector-vents"></div><div class="detector-cap"><span id="smokeLed"></span></div></div>
+<p id="smokeState" class="peripheral-state" role="status">Bereit</p>
+<button id="smokeToggle" class="compact" aria-pressed="false">Rauch simulieren</button>
+</div>
+<div class="peripheral"><h2>Blitzleuchte</h2><small class="muted">Optischer Alarmgeber · EG</small>
+<div class="beacon" aria-hidden="true"><div class="beacon-base"></div><div id="beaconLens" class="beacon-lens"></div></div>
+<p id="beaconState" class="peripheral-state" role="status">Bereit</p>
 </div>
 </div>
-<button id="restoreCalls" disabled>Handdruckmelder zurücksetzen</button>
-<p class="muted compact">Auf das weiße Feld drücken, um den Melder direkt auszulösen. Nach dem Zurücksetzen der Handdruckmelder löscht „BMZ rückstellen“ die gespeicherten Brandmeldungen.</p>
 </section>
 <section class="panel gap"><h2>FAT prüfen</h2>
 <button id="toggleFault" aria-pressed="false">Störung simulieren</button>
@@ -476,12 +511,7 @@ function render() {
   $('ueTest').disabled = (!free && !live) || s.ueOff;
   $('reset').disabled = !free && !live;
   if (free) {
-    for (const [i,id] of ['callA','callB'].entries()) {
-      const active = s.pressed.has(i);
-      $(id).disabled = active;
-      $(id).setAttribute('aria-pressed', String(active));
-    }
-    $('restoreCalls').disabled = !s.pressed.size;
+    renderPeripherals(s, live);
     $('toggleFault').setAttribute('aria-pressed', String(s.fault));
     $('toggleFault').textContent = s.fault ? 'Störung beheben' : 'Störung simulieren';
   }
@@ -717,8 +747,9 @@ $('approve').onclick = () => {
 };
 $('reset').onclick = () => {
   if (mode === 'free') {
-    if (exercise.pressed.size) {
-      report('Rückstellung gesperrt. Ein Handdruckmelder ist noch ausgelöst.');
+    if (exercise.pressed.size || exercise.smoke) {
+      const cause = exercise.smoke ? 'Am BMA-Rauchmelder steht noch Rauch an.' : 'Ein Handdruckmelder ist noch ausgelöst.';
+      report('Rückstellung gesperrt. ' + cause);
       return;
     }
     exercise.data.alarms = [];
@@ -750,7 +781,7 @@ function report(message) {
   appendLog(message);
 }
 function newFreeSession() {
-  return {data:{alarms:[]}, pressed:new Set(), index:0, level:0, fatQuiet:false,
+  return {data:{alarms:[]}, pressed:new Set(), openDoors:new Set(), smoke:false, index:0, level:0, fatQuiet:false,
     muted:false, controlsOff:false, ueOff:false, transmitted:false, ueTest:false, fault:false, testing:false};
 }
 function selectMode(next) {
@@ -784,24 +815,69 @@ const callPoints = [
   {group:'041',number:'01',type:'Handfeuermelder',floor:'EG',room:'Haupteingang'},
   {group:'042',number:'01',type:'Handfeuermelder',floor:'1. OG',room:'Treppenraum'}
 ];
-for (const [i,id] of ['callA','callB'].entries()) {
-  $(id).onclick = () => {
-    unlockAudio();
-    const alarm = callPoints[i];
-    const alarms = exercise.data.alarms;
+const smokePoint = {group:'043',number:'01',type:'Rauchmelder',floor:'1. OG',room:'Flur'};
+function registerPeripheralAlarm(alarm, message) {
+  unlockAudio();
+  if (!exercise.data.alarms.includes(alarm)) exercise.data.alarms.push(alarm);
+  exercise.fatQuiet = false;
+  exercise.transmitted ||= !exercise.ueOff;
+  exercise.index = exercise.level = 0;
+  report(message + ' · ' + alarm.group + '/' + alarm.number + '.');
+  render();
+}
+function renderPeripherals(session, live) {
+  for (const [i,key] of ['A','B'].entries()) {
+    const active = session.pressed.has(i);
+    const open = session.openDoors.has(i);
+    $('housing'+key).classList.toggle('is-open',open);
+    $('call'+key).disabled = active || open;
+    $('call'+key).setAttribute('aria-pressed',String(active));
+    $('reset'+key).hidden = !open;
+    $('reset'+key).disabled = !open || !active;
+    $('door'+key).disabled = open;
+    $('door'+key).setAttribute('aria-expanded',String(open));
+    $('doorToggle'+key).setAttribute('aria-expanded',String(open));
+    $('doorToggle'+key).textContent = open ? 'Klappe schließen' : 'Klappe öffnen';
+    $('state'+key).textContent = active ? 'Ausgelöst' : open ? 'Klappe offen' : 'Bereit';
+    $('state'+key).classList.toggle('active',active);
+  }
+  const smokeAlarm = session.data.alarms.includes(smokePoint);
+  $('smokeLed').classList.toggle('is-active',smokeAlarm);
+  $('smokeState').classList.toggle('active',smokeAlarm);
+  $('smokeState').textContent = session.smoke ? 'Rauch erkannt' : smokeAlarm ? 'Alarm gespeichert' : 'Bereit';
+  $('smokeToggle').textContent = session.smoke ? 'Rauch entfernen' : 'Rauch simulieren';
+  $('smokeToggle').setAttribute('aria-pressed',String(session.smoke));
+  $('beaconLens').classList.toggle('is-active',live);
+  $('beaconState').classList.toggle('active',live);
+  $('beaconState').textContent = live ? 'Optischer Alarm aktiv' : 'Bereit';
+}
+for (const [i,key] of ['A','B'].entries()) {
+  $('call'+key).onclick = () => {
     exercise.pressed.add(i);
-    if (!alarms.includes(alarm)) alarms.push(alarm);
-    exercise.fatQuiet = false;
-    exercise.transmitted ||= !exercise.ueOff;
-    exercise.index = exercise.level = 0;
-    report('Handdruckmelder ausgelöst · ' + alarm.group + '/' + alarm.number + '.');
+    registerPeripheralAlarm(callPoints[i], 'Handdruckmelder ausgelöst');
+  };
+  const toggleDoor = () => {
+    if (exercise.openDoors.has(i)) exercise.openDoors.delete(i);
+    else exercise.openDoors.add(i);
     render();
+    $('doorToggle'+key).focus();
+  };
+  $('door'+key).onclick = $('doorToggle'+key).onclick = toggleDoor;
+  $('reset'+key).onclick = () => {
+    exercise.pressed.delete(i);
+    report('Handdruckmelder ' + callPoints[i].group + '/' + callPoints[i].number + ' zurückgestellt. Der Alarm bleibt bis zur BMZ-Rückstellung gespeichert.');
+    render();
+    $('doorToggle'+key).focus();
   };
 }
-$('restoreCalls').onclick = () => {
-  exercise.pressed.clear();
-  report('Handdruckmelder zurückgesetzt. Die BMZ speichert den Alarm bis zur Rückstellung.');
-  render();
+$('smokeToggle').onclick = () => {
+  exercise.smoke = !exercise.smoke;
+  if (exercise.smoke) {
+    registerPeripheralAlarm(smokePoint, 'Automatischer Rauchmelder ausgelöst');
+  } else {
+    report('Rauch entfernt. Der Alarm bleibt bis zur BMZ-Rückstellung gespeichert.');
+    render();
+  }
 };
 $('toggleFault').onclick = () => {
   exercise.fault = !exercise.fault;
