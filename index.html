@@ -47,6 +47,23 @@
 .callpoint[aria-pressed=true] .call-trip{display:block}.callpoint[aria-pressed=true] .call-led{background:#ffb2a6;box-shadow:0 0 6px 2px #ff4e37}.call-station .callpoint:hover:not(:disabled){background:none;filter:brightness(1.16)}
 .card-tabs{display:flex;gap:6px;flex-wrap:wrap}.card-tabs button[aria-pressed=true]{background:#f9bd65;color:#21180b;border-color:#f9bd65}
 .laufkarte{background:#faf9f3;color:#1e2522;border:1px solid #b9b6a9;border-radius:7px;overflow:hidden}.card-head{display:flex;align-items:start;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid #b6beb5;font-size:13px}.card-head p{font-size:11px;margin-top:2px}.card-head span{font-weight:800;padding:4px 7px;background:#f4d260;border:1px solid #4b4230;border-radius:3px}.card-head span.manual{background:#f68c7c}.card-map{overflow-x:auto}.card-map svg{width:100%;min-width:375px;display:block;height:auto}.card-key{font-size:11px;padding:7px 10px;border-top:1px solid #b6beb5}
+
+/* Gerätefronten nach der Fotovorlage */
+.fat,.fbf{box-sizing:border-box;width:min(100%,370px);margin:auto;background:#21211d;border:7px solid #d74831;border-radius:4px;padding:0;box-shadow:0 2px 9px #000a,color-mix(in srgb,#a32a22 65%,transparent) 0 0 0 1px inset}
+.device-title{padding:14px 4px 8px;font-weight:650;font-size:clamp(14px,2.7vw,22px)}
+.fbf .device-title{min-height:84px;display:grid;place-items:center;padding:10px 3px}
+.fat-window{display:grid;grid-template-columns:minmax(37px,20%) minmax(0,1fr);gap:3px;padding:0 12px 16px 8px}
+.fat-window .fat-legend{grid-column:2;margin:0;font-weight:bold}.fat-display-labels{display:grid;align-items:center;font-size:9px;line-height:1.05}.fat-screen{background:#b6d754;border-width:3px;box-shadow:inset 0 0 12px #789e1c;font-size:clamp(10px,2vw,14px);padding:3px 5px}.fat-message{min-height:37px}.fat-message.fat-last{min-height:32px}
+.fat-keys{display:grid;grid-template-columns:1.08fr .91fr 1.03fr;border-top:2px solid #f2ead8;font-size:clamp(9px,1.45vw,12px)}
+.fat-direction,.fat-functions{border-right:2px solid #f2ead8;display:grid;text-align:center;align-items:center}
+.fat-direction{padding:8px 2px;row-gap:3px}.fat-direction>div{display:grid;grid-template-columns:19px 1fr;align-items:center;justify-items:center}.fat-direction>div>span{font-size:24px;line-height:1}
+.fat-direction small,.fat-functions small{font-size:inherit}.fat-functions label{min-height:76px;display:grid;align-content:center;justify-items:center;gap:3px;padding:3px 0}.fat-functions label+label{border-top:2px solid #f2ead8}
+.fat-indicators{padding:5px 3px 5px 6px;gap:0;align-content:stretch;min-width:0}.fat-indicators .lamp{overflow-wrap:anywhere}
+.fbf-grid{border:0;border-top:2px solid #f2ead8}.fbf-cell{display:grid;grid-template-columns:11px minmax(0,1fr) auto;min-height:57px;padding:4px;gap:4px;border:0;border-bottom:2px solid #f2ead8;font-size:clamp(9px,1.65vw,12px)}.fbf-cell:nth-child(odd){border-right:2px solid #f2ead8}.fbf-cell:nth-last-child(-n+2){border-bottom:none}.fbf-cell .lamp:before{width:8px;height:8px}.fbf-cell .lamp.off:before,.fat-indicators .lamp.off:before{background:#555049}
+.panel-key{box-sizing:border-box;display:block;width:44px;height:44px;min-height:44px;padding:0;border:4px solid #0b0a08;border-radius:3px;background:linear-gradient(145deg,#f8f1de,#cec4aa);box-shadow:inset 0 0 0 2px #b5a88e,0 1px 3px #000b}
+.panel-key:disabled{opacity:1;filter:brightness(.77)}.panel-key:hover:not(:disabled){background:#fff6da}.panel-key:active:not(:disabled){box-shadow:inset 0 2px 5px #0007}
+.panel-key.cursor-lit,.panel-key[aria-pressed=true]{background:#f2ce79;box-shadow:inset 0 0 6px #f6a53b}
+.panel-key.cursor-pulse{background:#fff0a2;box-shadow:inset 0 0 8px #ffb831,0 0 10px #ffb831}
 </style>
 </head>
 <body>
@@ -76,17 +93,22 @@
 <section class="panel instrument">
 <div class="device fat" aria-label="Feuerwehr-Anzeigetableau">
 <h2 class="device-title">Feuerwehr-Anzeigetableau</h2>
-<div class="fat-front">
-<div class="fat-display-area">
+<div class="fat-window">
 <div class="fat-legend">Meldergruppe / Melder</div>
+<div class="fat-display-labels"><span>erste<br>Meldung</span><span>letzte<br>Meldung</span></div>
 <div class="fat-screen" aria-live="polite">
 <div class="fat-message"><small id="lcdState">BETRIEB</small><strong id="lcdTop">Keine Meldung</strong><span id="lcdBottom">Anlage in Ruhe</span></div>
-<div class="fat-message fat-last"><small>LETZTE MELDUNG</small><strong id="lcdLastTop">—</strong><span id="lcdLastBottom"></span></div>
+<div class="fat-message fat-last"><strong id="lcdLastTop">—</strong><span id="lcdLastBottom"></span></div>
+</div></div>
+<div class="fat-keys">
+<div class="fat-direction">
+<div><span aria-hidden="true">↑</span><button id="prev" class="panel-key" aria-label="Vorherige Meldung" disabled></button></div>
+<small>weitere Meldungen</small>
+<div><span aria-hidden="true">↓</span><button id="next" class="panel-key" aria-label="Nächste Meldung" disabled></button></div>
 </div>
-<div class="fat-keyboard">
-<div><span class="fat-legend">Weitere Meldungen</span><div class="fat-arrows"><button id="prev" class="membrane" aria-label="Vorherige Meldung" disabled>▲</button><button id="next" class="membrane" aria-label="Nächste Meldung" disabled>▼</button></div></div>
-<div class="fat-actions"><button id="level" class="membrane">Anzeigeebene</button><button id="buzzer" class="membrane" disabled>Summer ab / Test</button></div>
-</div>
+<div class="fat-functions">
+<label>Anzeigeebene<button id="level" class="panel-key" aria-label="Anzeigeebene"></button></label>
+<label>Summer ab<button id="buzzer" class="panel-key" aria-label="Summer ab / Test" disabled></button><small>&gt; 5 s: Test</small></label>
 </div>
 <div class="fat-indicators">
 <span class="lamp green">Betrieb</span><span id="fatAlarm" class="lamp off">Alarm</span>
@@ -96,21 +118,9 @@
 </div>
 </section>
 <section class="panel instrument">
-<div class="section-title"><h2>Feuerwehr-Bedienfeld</h2><span class="label">FBF</span></div>
-<div class="device fbf" aria-label="Feuerwehr-Bedienfeld nach Vorlage FBF2003">
-<div class="device-title">Feuerwehr-Bedienfeld</div>
-<div class="fbf-grid">
-<div class="fbf-cell"><span class="fbf-number">1</span><span>Bedienfeld in Betrieb</span><span class="lamp green" role="img" aria-label="Betrieb aktiv"></span></div>
-<div class="fbf-cell"><span class="fbf-number">2</span><span>ÜE ausgelöst</span><span id="ue" class="lamp off" role="img" aria-label="ÜE nicht ausgelöst"></span></div>
-<div class="fbf-cell"><span class="fbf-number">3</span><span>Löschanlage ausgelöst</span><span class="lamp off" role="img" aria-label="Löschanlage nicht ausgelöst"></span></div>
-<div class="fbf-cell"><span class="fbf-number">4</span><span>Brandfall-Steuerungen ab</span><button id="controlsOff" class="fbf-key" aria-label="Brandfall-Steuerungen ab" aria-pressed="false" disabled></button></div>
-<div class="fbf-cell"><span class="fbf-number">5</span><span>Akustische Signale ab</span><button id="silence" class="fbf-key" aria-label="Akustische Signale ab" aria-pressed="false" disabled></button></div>
-<div class="fbf-cell"><span class="fbf-number">6</span><span>BMZ rückstellen</span><button id="reset" class="fbf-key" aria-label="BMZ rückstellen" disabled></button></div>
-<div class="fbf-cell"><span class="fbf-number">7</span><span>ÜE ab</span><button id="ueOff" class="fbf-key" aria-label="ÜE ab" aria-pressed="false" disabled></button></div>
-<div class="fbf-cell"><span class="fbf-number">8</span><span>ÜE Nr. prüfen <small class="ue-number">ÜE-Nr. 0042</small></span><button id="ueTest" class="fbf-key" aria-label="ÜE prüfen" disabled></button></div>
-</div>
-</div>
-<p class="muted compact fbf-caption">Die Gerätefronten orientieren sich am FAT4000 und FBF2003.</p>
+<div class="device fbf" aria-label="Feuerwehr-Bedienfeld">
+<h2 class="device-title">Feuerwehr-Bedienfeld</h2>
+<div class="fbf-grid"><div class="fbf-cell"><span id="fbfRun" class="lamp green" aria-hidden="true"></span><span>Bedienfeld<br>in Betrieb</span></div><div class="fbf-cell"><span id="ue" class="lamp off" aria-hidden="true"></span><span>ÜE<br>ausgelöst</span></div><div class="fbf-cell"><span id="fbfExt" class="lamp off" aria-hidden="true"></span><span>Löschanlage<br>ausgelöst</span></div><div class="fbf-cell"><span id="fbfControls" class="lamp off" aria-hidden="true"></span><span>Brandfall-<br>Steuerungen ab</span><button id="controlsOff" class="panel-key" aria-label="Brandfall-Steuerungen ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span id="fbfSilence" class="lamp off" aria-hidden="true"></span><span>Akustische<br>Signale ab</span><button id="silence" class="panel-key" aria-label="Akustische Signale ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span id="fbfReset" class="lamp off" aria-hidden="true"></span><span>BMZ<br>rückstellen</span><button id="reset" class="panel-key" aria-label="BMZ rückstellen" disabled></button></div><div class="fbf-cell"><span id="fbfUeOff" class="lamp off" aria-hidden="true"></span><span>ÜE ab</span><button id="ueOff" class="panel-key" aria-label="ÜE ab" aria-pressed="false" disabled></button></div><div class="fbf-cell"><span></span><span>ÜE Nr.<small class="ue-number">0042</small>prüfen</span><button id="ueTest" class="panel-key" aria-label="ÜE prüfen" disabled></button></div></div></div>
 <p class="feedback compact" id="panelFeedback" role="status"></p>
 </section>
 <section class="panel"><div class="section-title"><h2>Ereignisprotokoll</h2></div><ol id="log" class="report compact" aria-label="Ereignisse"><li>Noch keine Ereignisse</li></ol></section>
@@ -176,7 +186,7 @@
 <section id="result" class="panel gap score" aria-live="polite" hidden><h2>Übung abgeschlossen</h2><p id="summary"></p></section>
 </div>
 </div>
-<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und zweiseitige Übungslaufkarten nach dem Aufbau des Wetteraukreiser Merkblatts. Das FBF ist nach der Front des RLS FBF2003 gestaltet. Seine Schaltzustände werden vereinfacht simuliert. FAT-Summer und Gebäudealarm werden getrennt gesteuert. Die Tonquellen findest du unter „Tonquellen“. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p><p><a href="https://wetteraukreis.de/fileadmin/2_Service/sicherheit_ordnung_auslaender/Merkblatt_Feuerwehrlaufkarten.pdf">Gestaltungsvorlage · Merkblatt Feuerwehrlaufkarten des Wetteraukreises</a></p></details></footer>
+<footer><details><summary>Zum Übungsmodell</summary><p>Fiktive Objekte und zweiseitige Übungslaufkarten nach dem Aufbau des Wetteraukreiser Merkblatts. FAT und FBF sind nach der Fotovorlage gestaltet. Seine Schaltzustände werden vereinfacht simuliert. FAT-Summer und Gebäudealarm werden getrennt gesteuert. Die Tonquellen findest du unter „Tonquellen“. Freigabe und Rückstellung sind simuliert. Die Bedienung im Einsatz richtet sich nach dem Objekt und den örtlichen Vorgaben.</p><p><a href="https://www.lra-ebe.de/hostedmedia/8208/anschlussbedingungen-brandmeldeanlagen-ab-bma-ab-01062025.pdf">Fachliche Orientierung · Anschlussbedingungen für Brandmeldeanlagen</a></p><p><a href="https://www.rls.gmbh/media/pdf/39/97/95/FBF2003-seriell_mit_ADP-PSW__Bedien-Install__NF3__Rev_1-6_M5IGg94.pdf">Vorlage für das FBF · Herstelleranleitung, Abbildung 8</a></p><p><a href="https://www.rls.gmbh/media/pdf/e0/42/e7/FAT4000-FBF4000__Bedien-Install__Rev-1-18_DE_eCHqRO8.pdf">Vorlage für das FAT · Herstelleranleitung, Abbildung 1</a></p><p><a href="https://wetteraukreis.de/fileadmin/2_Service/sicherheit_ordnung_auslaender/Merkblatt_Feuerwehrlaufkarten.pdf">Gestaltungsvorlage · Merkblatt Feuerwehrlaufkarten des Wetteraukreises</a></p></details></footer>
 </main>
 <script>
 'use strict';
@@ -238,7 +248,7 @@ let audioContext;
 let alarmBuffer;
 let audioUnlock = 0;
 const audioTracks = [
-  {input:$('fatAudioFile'), label:'FAT-Summer', name:'pulsierender Übungston', off:'fatQuiet', volume:.09},
+  {input:$('fatAudioFile'), label:'FAT-Summer', name:'simulierter Piezo-Summer', off:'fatQuiet', volume:.08},
   {input:$('buildingAudioFile'), label:'Gebäudealarm', name:'leiser Übungston', off:'muted', volume:.10}
 ];
 function showAudioStatus() {
@@ -281,43 +291,82 @@ function createAlarmBuffer() {
   }
   return buffer;
 }
+const buzzerPeriod = .72;
+const buzzerOnTime = .46;
+let buzzerBuffer;
+let arrowFrame = 0;
+let arrowStart = null;
+function createBuzzerBuffer() {
+  const rate = audioContext.sampleRate;
+  const buffer = audioContext.createBuffer(1, Math.round(rate * buzzerPeriod), rate);
+  const samples = buffer.getChannelData(0);
+  for (let i = 0; i < Math.round(rate * buzzerOnTime); i++) {
+    const t = i / rate;
+    const envelope = Math.min(1, t / .003, (buzzerOnTime - t) / .016);
+    const phase = 2 * Math.PI * 2740 * t;
+    samples[i] = envelope * (.72 * Math.sin(phase) + .18 * Math.sin(phase * 2) +
+      .07 * Math.sin(phase * 3) + .06 * Math.sin(2 * Math.PI * 2805 * t));
+  }
+  return buffer;
+}
+function measurePulses(buffer) {
+  const stride = Math.max(1, Math.round(buffer.sampleRate * .025));
+  const samples = buffer.getChannelData(0);
+  const levels = [];
+  let peak = 0;
+  for (let start = 0; start < samples.length; start += stride) {
+    let sum = 0;
+    const end = Math.min(samples.length, start + stride);
+    for (let i = start; i < end; i++) sum += samples[i] * samples[i];
+    const level = Math.sqrt(sum / (end - start));
+    levels.push(level);
+    peak = Math.max(peak, level);
+  }
+  return {levels, threshold:Math.max(.0005, peak * .15), step:stride / buffer.sampleRate};
+}
 function startTrack(track, i) {
   const gain = audioContext.createGain();
   gain.gain.value = track.volume;
   gain.connect(audioContext.destination);
-  let source;
-  if (i === 0 && !track.buffer) {
-    source = audioContext.createOscillator();
-    source.frequency.value = 2380;
-    const pulse = audioContext.createOscillator();
-    const depth = audioContext.createGain();
-    pulse.type = 'square';
-    pulse.frequency.value = 2;
-    gain.gain.value = track.volume / 2;
-    depth.gain.value = track.volume / 2;
-    pulse.connect(depth).connect(gain.gain);
-    pulse.start();
-    track.pulse = pulse;
-  } else {
-    source = audioContext.createBufferSource();
-    source.buffer = track.buffer || (alarmBuffer ??= createAlarmBuffer());
-    source.loop = true;
-  }
+  const source = audioContext.createBufferSource();
+  source.buffer = track.buffer || (i === 0 ?
+    (buzzerBuffer ??= createBuzzerBuffer()) : (alarmBuffer ??= createAlarmBuffer()));
+  source.loop = true;
   source.connect(gain);
-  source.start();
+  track.startedAt = audioContext.currentTime;
+  source.start(track.startedAt);
   track.source = source;
   track.gain = gain;
+}
+function updateArrowPulse(now) {
+  arrowFrame = 0;
+  const canFlash = exercise && !exercise.done && !exercise.testing && !exercise.fatQuiet &&
+    exercise.level === 0 && exercise.data.alarms.length > 1;
+  let lit = false;
+  if (canFlash) {
+    arrowStart ??= now;
+    const track = audioTracks[0];
+    const useSoundClock = track.source && audioContext.state === 'running';
+    const elapsed = useSoundClock ? audioContext.currentTime - track.startedAt : (now - arrowStart) / 1000;
+    if (useSoundClock && track.profile) {
+      const {levels,threshold,step} = track.profile;
+      const i = Math.min(levels.length - 1, Math.floor((Math.max(0, elapsed) % track.buffer.duration) / step));
+      lit = levels[i] >= threshold;
+    } else {
+      lit = Math.max(0, elapsed) % buzzerPeriod < buzzerOnTime;
+    }
+    arrowFrame = requestAnimationFrame(updateArrowPulse);
+  } else {
+    arrowStart = null;
+  }
+  for (const id of ['prev','next']) $(id).classList.toggle('cursor-pulse', lit && !$(id).disabled);
 }
 function stopTrack(track) {
   if (!track.source) return;
   track.source.stop();
   track.source.disconnect();
-  if (track.pulse) {
-    track.pulse.stop();
-    track.pulse.disconnect();
-  }
   track.gain.disconnect();
-  track.source = track.pulse = track.gain = null;
+  track.source = track.gain = null;
 }
 function syncAudio() {
   if (!audioContext) return;
@@ -341,6 +390,7 @@ for (const track of audioTracks) {
       if (load !== track.load) return;
       stopTrack(track);
       track.buffer = buffer;
+      if (track === audioTracks[0]) track.profile = measurePulses(buffer);
       track.name = file.name;
       track.error = '';
       syncAudio();
@@ -403,17 +453,25 @@ function render() {
   }
   $('prev').disabled = testing || !showingAlarm || s.index === 0;
   $('next').disabled = testing || !showingAlarm || s.index === s.data.alarms.length - 1;
-  for (const id of ['prev','next']) $(id).classList.toggle('cursor-lit', testing || !$(id).disabled);
+  const pulsing = live && !s.fatQuiet && !testing && level === 0 && s.data.alarms.length > 1;
+  for (const id of ['prev','next']) {
+    $(id).classList.toggle('cursor-lit', testing || (!pulsing && !$(id).disabled));
+    if ($(id).disabled || !pulsing) $(id).classList.toggle('cursor-pulse', false);
+  }
   $('level').disabled = testing || levels.length === 1;
   $('buzzer').disabled = !free && (!live || s.fatQuiet);
   syncAudio();
   const transmitted = Boolean((live && s.transmitted) || (free && s.ueTest));
   $('ue').className = 'lamp ' + (transmitted ? 'red' : 'off');
   $('ue').setAttribute('aria-label', transmitted ? 'ÜE ausgelöst' : 'ÜE nicht ausgelöst');
-  $('reset').classList.toggle('alarm', live);
+  $('fbfReset').className = 'lamp ' + (live ? 'red' : 'off');
+  if (!arrowFrame) updateArrowPulse(performance.now());
   for (const [id,key] of [['silence','muted'],['controlsOff','controlsOff'],['ueOff','ueOff']]) {
     $(id).disabled = (!free && !live) || (free && live && key === 'controlsOff' && !s.controlsOff);
-    $(id).setAttribute('aria-pressed', String(Boolean((free || live) && s[key])));
+    const active = Boolean((free || live) && s[key]);
+    $(id).setAttribute('aria-pressed', String(active));
+    const led = {silence:'fbfSilence',controlsOff:'fbfControls',ueOff:'fbfUeOff'}[id];
+    $(led).className = 'lamp ' + (active ? 'amber' : 'off');
   }
   $('ueTest').disabled = (!free && !live) || s.ueOff;
   $('reset').disabled = !free && !live;
