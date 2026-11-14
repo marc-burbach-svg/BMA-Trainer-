@@ -72,6 +72,11 @@
 @keyframes detector-indicator{0%,16%{background:#ff483c;box-shadow:0 0 8px #ff493e}17%,100%{background:#775952;box-shadow:none}}
 @keyframes beacon-indicator{0%,10%{background:#ff4d40;box-shadow:inset 0 -8px 15px #a0211c,0 0 12px #ff5139}11%,100%{background-color:#741019}}
 @media(prefers-reduced-motion:reduce){.manual-cover{transition:none}.detector-cap span.is-active,.beacon-lens.is-active{animation:none;background:#de382e}}
+
+.alarm-select{display:grid;gap:5px;margin:8px 0 10px}.alarm-select select{width:min(100%,250px)}.scenario-actions{display:flex;flex-wrap:wrap;gap:7px}
+#scenarioEditor{border-top:1px solid var(--line);padding-top:9px}#scenarioEditor summary{cursor:pointer}#objectForm{margin-top:12px}#objectForm label{display:grid;gap:4px;font-size:13px}
+#objectForm input,#objectForm textarea,#objectForm select{color:inherit;background:#171b1e;padding:8px;border:1px solid #59636a;border-radius:6px;font:inherit;width:100%;min-width:0}
+.editor-line{margin:0;padding:10px;border:1px solid var(--line);border-radius:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}.editor-line .line-room{grid-column:1/-1}.editor-line button{justify-self:start}
 </style>
 </head>
 <body>
@@ -87,14 +92,17 @@
 </section>
 <section class="panel audio-panel" aria-label="Tonquellen">
 <div class="row"><strong>Akustik</strong><button id="sound" aria-pressed="true">Ton an</button></div>
+<label class="alarm-select">Gebäudealarm
+<select id="alarmSound"><option value="voice">Räumungsdurchsage</option><option value="tone">Signalton</option></select></label>
 <details><summary>Eigene Aufnahmen</summary>
 <div class="audio-inputs">
 <label>FAT-Summer<input id="fatAudioFile" type="file" accept="audio/*,.m4a,.mp3,.wav"></label>
+<label>Räumungsdurchsage<input id="voiceAudioFile" type="file" accept="audio/*,.m4a,.mp3,.wav"></label>
 <label>Gebäudealarm<input id="buildingAudioFile" type="file" accept="audio/*,.m4a,.mp3,.wav"></label>
 </div>
-<p class="muted compact">Die eingebauten Signale laufen im Audiomotor bis zur Quittierung. Eigene MP3-, M4A- oder WAV-Aufnahmen werden lokal geladen und nahtlos wiederholt. Stille innerhalb einer Aufnahme bleibt hörbar. <a href="https://www.pfannenberg.com/en/signaling-technologies/audible-signaling/sounders/pa-1/" target="_blank" rel="noopener">Hersteller-Hörprobe für den Gebäudealarm</a></p>
+<p class="muted compact">Räumungsdurchsage und Signalton laufen bis zur Abschaltung der Gebäudeakustik. Die Übungsdurchsage verwendet die Stimme deines Browsers. Eigene MP3-, M4A- oder WAV-Aufnahmen werden lokal geladen und nahtlos wiederholt. Stille innerhalb einer Aufnahme bleibt hörbar. <a href="https://www.pfannenberg.com/en/signaling-technologies/audible-signaling/sounders/pa-1/" target="_blank" rel="noopener">Hersteller-Hörprobe für den Gebäudealarm</a></p>
 </details>
-<p id="audioStatus" class="muted compact" role="status">Gebäudealarm und FAT-Summer: eingebaute Übungstöne</p>
+<p id="audioStatus" class="muted compact" role="status">Räumungsdurchsage: deutsche Browserstimme · FAT-Summer: Übungston</p>
 </section>
 <div class="layout">
 <div class="stack">
@@ -134,6 +142,24 @@
 <section class="panel"><div class="section-title"><h2>Ereignisprotokoll</h2></div><ol id="log" class="report compact" aria-label="Ereignisse"><li>Noch keine Ereignisse</li></ol></section>
 </div>
 <div id="freePanel" class="stack" hidden>
+<section class="panel gap" aria-label="Szenario-Steuerung">
+<h2>Eigene Szenarien</h2>
+<label class="gap">Objekt<select id="objectChoice"></select></label>
+<p id="objectNote" class="muted compact" hidden></p>
+<label class="gap">Melderlinie<select id="lineChoice"></select></label>
+<div class="scenario-actions"><button id="lineAlarm" class="danger" disabled>Melderlinie auslösen</button><button id="lineClear" disabled>Auslösung aufheben</button></div>
+<p id="lineState" class="muted compact" role="status"></p>
+<details id="scenarioEditor"><summary>Szenario-Editor</summary>
+<form id="objectForm" class="gap">
+<div class="scenario-actions"><button type="button" id="newObject">Neues Objekt</button><button type="button" id="editObject" disabled>Objekt bearbeiten</button></div>
+<label>Objektname<input id="objectName" maxlength="80" required placeholder="z. B. Sporthalle am Mühlweg"></label>
+<label>Lagebeschreibung <small>(optional)</small><textarea id="objectDescription" rows="2" maxlength="340"></textarea></label>
+<div id="lineRows" class="gap"></div>
+<div class="scenario-actions"><button type="button" id="addLine">Melderlinie hinzufügen</button><button type="submit" id="saveObject" class="action">Szenario speichern</button></div>
+<p id="editorStatus" class="muted compact" role="status">Szenarien werden in diesem Browser gespeichert.</p>
+</form>
+</details>
+</section>
 <section class="panel gap">
 <div class="row"><h2>Handdruckmelder</h2><span class="label">Übungsanlage</span></div>
 <div class="callpoints"><div class="call-station">
@@ -284,7 +310,8 @@ let alarmBuffer;
 let audioUnlock = 0;
 const audioTracks = [
   {input:$('fatAudioFile'), label:'FAT-Summer', name:'simulierter Piezo-Summer', off:'fatQuiet', volume:.08},
-  {input:$('buildingAudioFile'), label:'Gebäudealarm', name:'leiser Übungston', off:'muted', volume:.10}
+  {input:$('buildingAudioFile'), label:'Gebäudealarm', name:'leiser Übungston', off:'muted', volume:.10},
+  {input:$('voiceAudioFile'), label:'Räumungsdurchsage', name:'deutsche Browserstimme', off:'muted', volume:.27}
 ];
 function showAudioStatus() {
   $('audioStatus').textContent = [...audioTracks].reverse()
@@ -403,16 +430,72 @@ function stopTrack(track) {
   track.gain.disconnect();
   track.source = track.gain = null;
 }
+const speech = typeof window.speechSynthesis !== 'undefined' ? window.speechSynthesis : null;
+const announcement = 'Achtung, eine Durchsage. Dies ist eine Übung. Bitte verlassen Sie das Gebäude über die gekennzeichneten Fluchtwege. Benutzen Sie keine Aufzüge.';
+let speakingAlarm = false;
+let speechGeneration = 0;
+let speechTimer;
+function setSpeechAlarm(active) {
+  if (active === speakingAlarm) return;
+  speakingAlarm = active;
+  const generation = ++speechGeneration;
+  clearTimeout(speechTimer);
+  if (!active) {
+    speech?.cancel();
+    return;
+  }
+  const speak = () => {
+    if (generation !== speechGeneration) return;
+    const message = new window.SpeechSynthesisUtterance(announcement);
+    message.lang = 'de-DE';
+    message.rate = .88;
+    message.volume = .38;
+    const german = speech.getVoices().find(voice => voice.lang === 'de-DE');
+    if (german) message.voice = german;
+    message.onend = () => {
+      if (generation === speechGeneration) speechTimer = setTimeout(speak, 3600);
+    };
+    message.onerror = () => {
+      if (generation !== speechGeneration) return;
+      audioTracks[2].error = 'Browserstimme nicht verfügbar. Signalton aktiv.';
+      showAudioStatus();
+      syncAudio();
+    };
+    try {
+      speech.speak(message);
+    } catch {
+      message.onerror();
+    }
+  };
+  speak();
+}
 function syncAudio() {
-  if (!audioContext) return;
   const live = Boolean(exercise && !exercise.done && exercise.data.alarms.length);
+  const voice = audioTracks[2];
+  const building = Boolean(soundOn && live && !exercise.muted);
+  const voiceMode = $('alarmSound').value !== 'tone';
+  const speechAvailable = Boolean(speech && window.SpeechSynthesisUtterance && !voice.error?.startsWith('Browserstimme'));
+  const recording = building && voiceMode && Boolean(voice.buffer);
+  if (building && voiceMode && !recording && !speechAvailable && !voice.error) {
+    voice.error = 'Browserstimme nicht verfügbar. Signalton aktiv.';
+    showAudioStatus();
+  }
+  setSpeechAlarm(building && voiceMode && !recording && speechAvailable);
+  if (!audioContext) return;
+  const active = [
+    Boolean(soundOn && (exercise?.testing || (live && !exercise.fatQuiet))),
+    building && (!voiceMode || (!recording && !speechAvailable)),
+    recording
+  ];
   audioTracks.forEach((track, i) => {
-    const test = i === 0 && exercise?.testing;
-    const active = soundOn && (test || (live && !exercise[track.off]));
-    if (active && !track.source) startTrack(track, i);
-    if (!active) stopTrack(track);
+    if (active[i] && !track.source) startTrack(track, i);
+    if (!active[i]) stopTrack(track);
   });
 }
+$('alarmSound').onchange = () => {
+  unlockAudio();
+  syncAudio();
+};
 for (const track of audioTracks) {
   track.input.addEventListener('change', async () => {
     const file = track.input.files[0];
@@ -512,6 +595,7 @@ function render() {
   $('reset').disabled = !free && !live;
   if (free) {
     renderPeripherals(s, live);
+    renderObjectControls(s);
     $('toggleFault').setAttribute('aria-pressed', String(s.fault));
     $('toggleFault').textContent = s.fault ? 'Störung beheben' : 'Störung simulieren';
   }
@@ -627,6 +711,7 @@ function drawCard() {
 
 function start(index) {
   unlockAudio();
+  setSpeechAlarm(false);
   audioTracks.forEach(stopTrack);
   const data = scenarios[index];
   exercise = {
@@ -747,8 +832,8 @@ $('approve').onclick = () => {
 };
 $('reset').onclick = () => {
   if (mode === 'free') {
-    if (exercise.pressed.size || exercise.smoke) {
-      const cause = exercise.smoke ? 'Am BMA-Rauchmelder steht noch Rauch an.' : 'Ein Handdruckmelder ist noch ausgelöst.';
+    if (exercise.pressed.size || exercise.smoke || exercise.activeLines.size) {
+      const cause = exercise.smoke ? 'Am BMA-Rauchmelder steht noch Rauch an.' : exercise.pressed.size ? 'Ein Handdruckmelder ist noch ausgelöst.' : 'Eine Melderlinie ist noch ausgelöst.';
       report('Rückstellung gesperrt. ' + cause);
       return;
     }
@@ -781,7 +866,7 @@ function report(message) {
   appendLog(message);
 }
 function newFreeSession() {
-  return {data:{alarms:[]}, pressed:new Set(), openDoors:new Set(), smoke:false, index:0, level:0, fatQuiet:false,
+  return {data:{alarms:[]}, pressed:new Set(), openDoors:new Set(), smoke:false, activeLines:new Set(), index:0, level:0, fatQuiet:false,
     muted:false, controlsOff:false, ueOff:false, transmitted:false, ueTest:false, fault:false, testing:false};
 }
 function selectMode(next) {
@@ -790,6 +875,7 @@ function selectMode(next) {
   clearTimeout(testTimer);
   heldForTest = false;
   if (exercise) exercise.testing = false;
+  setSpeechAlarm(false);
   audioTracks.forEach(stopTrack);
   const free = next === 'free';
   if (free) {
@@ -802,6 +888,7 @@ function selectMode(next) {
   mode = next;
   $('guidedToolbar').hidden = $('guidedPanel').hidden = free;
   $('freePanel').hidden = !free;
+  if (free) populateObjects();
   $('modeGuided').setAttribute('aria-pressed', String(!free));
   $('modeFree').setAttribute('aria-pressed', String(free));
   $('panelFeedback').textContent = '';
@@ -914,6 +1001,140 @@ $('buzzer').addEventListener('keydown', event => {
 for (const event of ['pointerup','pointercancel','lostpointercapture','keyup','blur']) {
   $('buzzer').addEventListener(event, () => clearTimeout(holdTimer));
 }
+
+const objectStorageKey = 'bma-trainer.objects.v1';
+let objects = [];
+let objectId = '';
+let editingObject = '';
+try {
+  const saved = JSON.parse(localStorage.getItem(objectStorageKey) || '[]');
+  if (Array.isArray(saved)) objects = saved;
+} catch {
+  $('editorStatus').textContent = 'Gespeicherte Szenarien konnten nicht geladen werden.';
+}
+const currentObject = () => objects.find(object => object.id === objectId);
+const currentLine = () => currentObject()?.lines.find(line => lineKey(line) === $('lineChoice').value);
+const lineKey = line => line.group + '/' + line.number;
+
+function populateObjects() {
+  $('objectChoice').replaceChildren(new Option('Übungsanlage', ''), ...objects.map(object => new Option(object.name, object.id)));
+  $('objectChoice').value = objectId;
+  populateLines();
+}
+function populateLines() {
+  const object = currentObject();
+  const previous = $('lineChoice').value;
+  $('lineChoice').replaceChildren(new Option('Linie auswählen', ''),
+    ...(object?.lines || []).map(line => new Option(lineKey(line) + ' · ' + line.floor + ' · ' + line.room, lineKey(line))));
+  if (object?.lines.some(line => lineKey(line) === previous)) $('lineChoice').value = previous;
+  $('objectNote').hidden = !object?.description;
+  $('objectNote').textContent = object?.description || '';
+}
+function renderObjectControls(session) {
+  const line = currentLine();
+  const active = line && session.activeLines.has(lineKey(line));
+  const stored = line && session.data.alarms.includes(line);
+  const busy = session.data.alarms.length > 0;
+  $('objectChoice').disabled = busy;
+  $('lineChoice').disabled = !currentObject();
+  $('lineAlarm').disabled = !line || active;
+  $('lineClear').disabled = !active;
+  $('editObject').disabled = !currentObject() || busy;
+  $('saveObject').disabled = busy;
+  $('lineState').textContent = active ? lineKey(line) + ' ausgelöst' :
+    stored ? lineKey(line) + ' · Alarm gespeichert' :
+    session.activeLines.size ? session.activeLines.size + ' Melderlinie(n) noch ausgelöst' : '';
+}
+function addEditorLine(line = {}) {
+  const row = document.createElement('fieldset');
+  row.className = 'editor-line';
+  row.innerHTML = `<legend>Melderlinie</legend>
+    <label>Meldergruppe<input name="group" inputmode="numeric" pattern="[0-9]{1,5}" maxlength="5" required></label>
+    <label>Meldernummer<input name="number" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" required></label>
+    <label>Melderart<select name="type"><option>Rauchmelder</option><option>Handfeuermelder</option><option>Wärmemelder</option><option>Strömungswächter</option></select></label>
+    <label>Geschoss<input name="floor" maxlength="22" placeholder="z. B. EG" required></label>
+    <label class="line-room">Raum / Bereich<input name="room" maxlength="65" required></label>
+    <button type="button" class="compact">Linie entfernen</button>`;
+  for (const field of row.querySelectorAll('[name]')) {
+    if (line[field.name] !== undefined) field.value = line[field.name];
+  }
+  row.querySelector('button').onclick = () => {
+    if ($('lineRows').children.length <= 1) {
+      $('editorStatus').textContent = 'Ein Szenario braucht mindestens eine Melderlinie.';
+      return;
+    }
+    row.remove();
+  };
+  $('lineRows').append(row);
+}
+function editObject(object) {
+  editingObject = object?.id || '';
+  $('objectName').value = object?.name || '';
+  $('objectDescription').value = object?.description || '';
+  $('lineRows').replaceChildren();
+  for (const line of object?.lines || [{}]) addEditorLine(line);
+  $('editorStatus').textContent = object ? 'Bearbeite: ' + object.name : 'Neues Szenario';
+}
+$('newObject').onclick = () => editObject();
+$('editObject').onclick = () => editObject(currentObject());
+$('addLine').onclick = () => addEditorLine();
+$('objectForm').onsubmit = event => {
+  event.preventDefault();
+  if (mode !== 'free' || exercise.data.alarms.length) return;
+  const name = $('objectName').value.trim();
+  const description = $('objectDescription').value.trim();
+  const lines = Array.from($('lineRows').children, row => Object.fromEntries(
+    Array.from(row.querySelectorAll('[name]'), field => [field.name, field.value.trim()])
+  ));
+  if (!name || !lines.length || lines.some(line => !line.floor || !line.room)) {
+    $('editorStatus').textContent = 'Objektname, Geschoss und Raum ausfüllen.';
+    return;
+  }
+  for (const line of lines) {
+    line.group = String(Number(line.group)).padStart(3, '0');
+    line.number = String(Number(line.number)).padStart(2, '0');
+  }
+  const keys = lines.map(lineKey);
+  if (new Set(keys).size !== keys.length || keys.some(key => ['041/01','042/01','043/01'].includes(key))) {
+    $('editorStatus').textContent = 'Meldernummern je Gruppe nur einmal vergeben. 041/01, 042/01 und 043/01 sind für die vorhandenen Geräte belegt.';
+    return;
+  }
+  const id = editingObject || String(Date.now());
+  const object = {id,name,description,lines};
+  const next = [...objects.filter(item => item.id !== id), object];
+  try {
+    localStorage.setItem(objectStorageKey, JSON.stringify(next));
+    $('editorStatus').textContent = 'Szenario gespeichert: ' + name;
+  } catch {
+    $('editorStatus').textContent = 'Szenario für diese Sitzung übernommen. Dauerhaftes Speichern fehlgeschlagen.';
+  }
+  objects = next;
+  editingObject = objectId = id;
+  populateObjects();
+  render();
+};
+$('objectChoice').onchange = () => {
+  objectId = $('objectChoice').value;
+  populateLines();
+  render();
+};
+$('lineChoice').onchange = () => render();
+$('lineAlarm').onclick = () => {
+  const line = currentLine();
+  if (!line) return;
+  exercise.activeLines.add(lineKey(line));
+  registerPeripheralAlarm(line, currentObject().name + ' · Melderlinie ausgelöst');
+};
+$('lineClear').onclick = () => {
+  const line = currentLine();
+  if (!line) return;
+  exercise.activeLines.delete(lineKey(line));
+  report('Auslösung aufgehoben · ' + lineKey(line) + '. Der Alarm bleibt bis zur BMZ-Rückstellung gespeichert.');
+  render();
+};
+$('scenarioEditor').addEventListener('toggle', () => {
+  if ($('scenarioEditor').open && !$('lineRows').children.length) addEditorLine();
+});
 
 render();
 </script>
