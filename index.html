@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BMA-Trainer V14.4 · Feuerwehr</title>
+<title>BMA-Trainer V14.5 · Feuerwehr</title>
 <style>
 :root{color-scheme:dark;--bg:#101315;--panel:#1b2023;--line:#343c41;--text:#eff2f2;--muted:#aab5bc;--amber:#ffc570;--red:#ff786f;--green:#90e2aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main,header>div{max-width:1220px;margin:auto;padding:24px}header{border-bottom:1px solid var(--line);background:#161a1c}header>div,.row,.section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(29px,5vw,44px);letter-spacing:-.05em;line-height:1.05}h2{font-size:19px}h3{font-size:16px}.eyebrow,.label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.eyebrow{color:var(--red);margin-bottom:7px}.tag,.lamp{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:700}.tag{padding:7px 12px;border:1px solid var(--line);border-radius:30px}.lamp::before,.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.off{color:var(--muted)}.off::before{background:#505a60}
@@ -387,6 +387,10 @@
 <label><input id="causeChecked" type="checkbox"> Auslöseursache behoben</label>
 </div>
 <button id="cloudApprove" class="action">BMZ-Rückstellung freigeben</button>
+<div class="gap" style="border-top:1px solid var(--line);padding-top:10px">
+<button id="cloudResetScenario" class="danger" type="button" disabled>Szenario zurücksetzen</button>
+<p class="muted compact">Beendet die laufende Lage und setzt die gemeinsame Anlage auf allen Geräten in den Ausgangszustand.</p>
+</div>
 </section>
 </div>
 <div id="guidedPanel" class="stack">
@@ -1317,6 +1321,8 @@ const idleRoom = () => ({
   routeChecked:false, areaChecked:false, causeChecked:false, event:'Anlage in Ruhe'
 });
 const instructor = () => cloud.role === 'instructor';
+const scenarioResetEvent = 'Instruktor hat das Szenario zurückgesetzt';
+let lastScenarioReset = -1;
 const cloudMessage = message => { $('cloudStatus').textContent = message; };
 
 function cloudControls() {
@@ -1331,6 +1337,7 @@ function cloudControls() {
   $('cloudClear').disabled = !ready || !key || protectedCallKeys.has(key) || !room.active.includes(key);
   $('cloudClearAll').disabled = !ready || !room.active.some(id => !protectedCallKeys.has(id));
   $('cloudApprove').disabled = !ready || !readyForRelease(room) || room.approved;
+  $('cloudResetScenario').disabled = !ready || !instructor();
   $('cloudClearAll').textContent = room?.active.some(id => protectedCallKeys.has(id)) ?
     'Übrige Auslösungen aufheben' : 'Alle Auslösungen aufheben';
   $('cloudObject').disabled = !ready || live;
@@ -1354,8 +1361,16 @@ function cloudControls() {
 }
 
 function updateSharedPanel() {
-  if (mode !== 'shared') return;
   const r = cloud.state;
+  if (r?.event === scenarioResetEvent && r.revision > lastScenarioReset) {
+    lastScenarioReset = r.revision;
+    sharedDoors.clear();
+    $('walkChoice').value = '';
+    $('walkCard').value = '';
+    walkSide = 'front';
+    if (mode === 'shared') $('panelFeedback').textContent = '';
+  }
+  if (mode !== 'shared') return;
   if (instructor() && r?.alarms.length && cloudObject()?.name !== r.object) {
     const choice = [...$('cloudObject').options].find(option => option.text === r.object);
     if (choice) $('cloudObject').value = choice.value;
@@ -1581,6 +1596,11 @@ $('cloudClearAll').onclick = () => {
       'Alle Auslösungen aufgehoben'};
   });
 };
+$('cloudResetScenario').onclick = () => {
+  if (!instructor()) return;
+  changeRoom(room => ({...idleRoom(),revision:room.revision,rwaOpen:false,ueUntil:0,
+    event:scenarioResetEvent}));
+};
 $('cloudApprove').onclick = () => {
   if (instructor()) changeRoom(room => {
     if (!readyForRelease(room)) throw Error('Erkundung, Bewertung oder Checkliste noch offen.');
@@ -1615,6 +1635,7 @@ $('reset').onclick = () => {
 };
 
 function disconnectRoom() {
+  lastScenarioReset = -1;
   sharedDoors.clear();
   cloud.epoch++;
   cloud.stopRoom?.();
