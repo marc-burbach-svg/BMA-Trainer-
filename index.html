@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BMA-Trainer · Feuerwehr</title>
+<title>BMA-Trainer V14.4 · Feuerwehr</title>
 <style>
 :root{color-scheme:dark;--bg:#101315;--panel:#1b2023;--line:#343c41;--text:#eff2f2;--muted:#aab5bc;--amber:#ffc570;--red:#ff786f;--green:#90e2aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main,header>div{max-width:1220px;margin:auto;padding:24px}header{border-bottom:1px solid var(--line);background:#161a1c}header>div,.row,.section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(29px,5vw,44px);letter-spacing:-.05em;line-height:1.05}h2{font-size:19px}h3{font-size:16px}.eyebrow,.label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.eyebrow{color:var(--red);margin-bottom:7px}.tag,.lamp{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:700}.tag{padding:7px 12px;border:1px solid var(--line);border-radius:30px}.lamp::before,.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.off{color:var(--muted)}.off::before{background:#505a60}
@@ -168,6 +168,7 @@
 <section class="panel"><div class="section-title"><h2>Ereignisprotokoll</h2></div><ol id="log" class="report compact" aria-label="Ereignisse"><li>Noch keine Ereignisse</li></ol></section>
 </div>
 <div id="freePanel" class="stack" hidden>
+<p class="muted compact">Einzelübung auf diesem Gerät. Änderungen werden nicht in den gemeinsamen Übungsraum übertragen.</p>
 <section class="panel gap" aria-label="Szenario-Steuerung">
 <h2>Eigene Szenarien</h2>
 <label class="gap">Objekt<select id="objectChoice"></select></label>
@@ -1324,6 +1325,7 @@ function cloudControls() {
   const live = Boolean(room?.alarms.length);
   const selected = selectedCloudLine();
   const key = selected && lineKey(selected);
+  $('initRoom').disabled = !cloud.connected;
   $('cloudStart').disabled = !ready || live || !cloudObject();
   $('cloudRaise').disabled = !ready || !key || room.active.includes(key);
   $('cloudClear').disabled = !ready || !key || protectedCallKeys.has(key) || !room.active.includes(key);
@@ -1456,34 +1458,80 @@ function roomAlarm(line) {
   const {group,number,type,floor,room} = line;
   return {group,number,type,floor,room};
 }
+function roomPatch(before, next) {
+  return {...Object.fromEntries(Object.keys(next).filter(key => next[key] !== before[key])
+    .map(key => [key,next[key]])),revision:before.revision + 1};
+}
+
+function canRebaseCommand(before, next, latest) {
+  const equal = (left,right) => JSON.stringify(left) === JSON.stringify(right);
+  if (latest.revision === before.revision) return false;
+  const sameAlarms = latest.object === before.object && equal(latest.alarmKeys,before.alarmKeys);
+  const raisesAlarm = next.alarms !== before.alarms && next.alarms.length > 0;
+  if (raisesAlarm) {
+    return latest.object === next.object && latest.alarms.length > 0 &&
+      before.alarmKeys.every(key => latest.alarmKeys.includes(key));
+  }
+  if (!sameAlarms) return false;
+  const changesProgress = ['arrived','decision','review','routeChecked','areaChecked','causeChecked','approved','active']
+    .some(key => !equal(before[key],next[key]));
+  if (changesProgress && next.arrived === before.arrived &&
+      (!equal(before.decision,latest.decision) || !equal(before.review,latest.review))) return false;
+  if (changesProgress && !equal(before.active,latest.active)) return false;
+  return true;
+}
+
 async function changeRoom(operation, fastField) {
   if (mode !== 'shared' || !cloud.state || !cloud.connected || cloud.pending) return;
   const epoch = cloud.epoch;
+  const ref = cloud.roomRef;
+  const api = cloud.dbApi;
   const before = cloud.state;
-  let next;
-  try {
-    next = operation(before);
-  } catch (error) {
-    cloudMessage(error.message);
-    return;
+  let optimistic;
+  function applyCommitted(update) {
+    if (epoch !== cloud.epoch || (cloud.state?.revision ?? -1) >= update.revision) return;
+    if (mode === 'shared' && update.event !== cloud.state?.event) appendLog(update.event);
+    cloud.state = update;
   }
-  cloud.pending = true;
   try {
+    const next = operation(before);
+    const patch = roomPatch(before,next);
+    cloud.pending = true;
     if (fastField) {
-      cloud.state = next;
+      optimistic = {...before,...patch,revision:before.revision};
+      cloud.state = optimistic;
       updateSharedPanel();
-      await cloud.dbApi.updateDoc(cloud.roomRef,{[fastField]:next[fastField],event:next.event,revision:before.revision+1});
     } else {
-      const patch = Object.fromEntries(Object.keys(next).filter(key => next[key] !== before[key])
-        .map(key => [key,next[key]]));
-      await cloud.dbApi.updateDoc(cloud.roomRef,{...patch,revision:before.revision+1});
+      cloudControls();
     }
-    if (epoch === cloud.epoch) cloudMessage('Verbunden');
+    cloudMessage('Befehl wird synchronisiert …');
+    try {
+      await api.updateDoc(ref,patch);
+      applyCommitted({...before,...patch});
+    } catch (error) {
+      if (epoch !== cloud.epoch || error.code !== 'permission-denied' || !cloud.connected) throw error;
+      const committed = await api.runTransaction(cloud.db,async tx => {
+        if (epoch !== cloud.epoch) throw Error('Übungsraum wurde gewechselt.');
+        const snapshot = await tx.get(ref);
+        if (!snapshot.exists()) throw error;
+        const latest = snapshot.data();
+        if (!canRebaseCommand(before,next,latest)) {
+          if (latest.revision === before.revision) throw error;
+          throw Error('Die Lage hat sich geändert. Bitte prüfe den aktuellen Stand.');
+        }
+        const retry = operation(latest);
+        const retryPatch = roomPatch(latest,retry);
+        tx.update(ref,retryPatch);
+        return {...latest,...retryPatch};
+      });
+      applyCommitted(committed);
+    }
+    if (epoch === cloud.epoch && cloud.connected) cloudMessage('Verbunden');
   } catch (error) {
     if (epoch === cloud.epoch) {
-      if (cloud.state === next) cloud.state = before;
+      if (optimistic && cloud.state === optimistic) cloud.state = before;
       cloudMessage(error.code === 'permission-denied' ?
-        'Aktion abgelehnt. Warte auf den aktuellen Stand und versuche es erneut.' : 'Aktion fehlgeschlagen: ' + (error.code || error.message));
+        'Aktion nicht zugelassen. Prüfe Rolle und Firestore-Regeln.' : 'Aktion fehlgeschlagen: ' + (error.code || error.message));
     }
   } finally {
     if (epoch === cloud.epoch) {
@@ -1595,16 +1643,22 @@ function listenToRoom() {
       return;
     }
     const next = snapshot.exists() ? snapshot.data() : null;
+    if (next && cloud.state && next.revision < cloud.state.revision) {
+      cloud.connected = true;
+      cloudMessage(cloud.pending ? 'Befehl wird synchronisiert …' : 'Verbunden');
+      cloudControls();
+      return;
+    }
     if (next?.event && next.event !== cloud.state?.event && mode === 'shared') appendLog(next.event);
     cloud.state = next;
     cloud.connected = true;
-    cloudMessage(next ? 'Verbunden' : 'Der Instruktor muss den Übungsraum initialisieren.');
+    cloudMessage(next ? (cloud.pending ? 'Befehl wird synchronisiert …' : 'Verbunden') : 'Der Instruktor muss den Übungsraum initialisieren.');
     $('initRoom').hidden = !instructor() || Boolean(next);
     updateSharedPanel();
   }, error => lockTrainer('Übungsraum nicht zugänglich: ' + error.code));
 }
 $('initRoom').onclick = async () => {
-  if (!instructor()) return;
+  if (!instructor() || !cloud.connected) return;
   try {
     await cloud.dbApi.runTransaction(cloud.db, async tx => {
       const snapshot = await tx.get(cloud.roomRef);
@@ -1651,10 +1705,7 @@ async function setupCloud() {
       if (!user) return;
       cloud.stopRole = dbApi.onSnapshot(dbApi.doc(cloud.db,'bmaUsers',user.uid), {includeMetadataChanges:true}, snapshot => {
         if (auth.currentUser?.uid !== user.uid) return;
-        if (snapshot.metadata.fromCache) {
-          lockTrainer('Rolle wird mit dem Server abgeglichen …');
-          return;
-        }
+        if (snapshot.metadata.fromCache) return;
         const profile = snapshot.data();
         if (profile?.active !== true || !['instructor','participant'].includes(profile.role)) {
           lockTrainer('Für dieses Konto ist noch keine aktive Rolle hinterlegt.');
@@ -1666,8 +1717,6 @@ async function setupCloud() {
         $('accessPanel').hidden = true;
         $('trainerApp').hidden = false;
         $('roleLabel').textContent = instructor() ? 'Instruktor' : 'Teilnehmer';
-        $('modeFree').hidden = !instructor();
-        if (!instructor() && mode === 'free') localMode('guided');
         openShared();
         $('instructorPanel').hidden = !instructor();
         listenToRoom();
