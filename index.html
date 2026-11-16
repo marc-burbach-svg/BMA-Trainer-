@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BMA-Trainer V15.1 · Feuerwehr</title>
+<title>BMA-Trainer V15.2 · Feuerwehr</title>
 <style>
 :root{color-scheme:dark;--bg:#101315;--panel:#1b2023;--line:#343c41;--text:#eff2f2;--muted:#aab5bc;--amber:#ffc570;--red:#ff786f;--green:#90e2aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main,header>div{max-width:1220px;margin:auto;padding:24px}header{border-bottom:1px solid var(--line);background:#161a1c}header>div,.row,.section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(29px,5vw,44px);letter-spacing:-.05em;line-height:1.05}h2{font-size:19px}h3{font-size:16px}.eyebrow,.label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.eyebrow{color:var(--red);margin-bottom:7px}.tag,.lamp{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:700}.tag{padding:7px 12px;border:1px solid var(--line);border-radius:30px}.lamp::before,.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.off{color:var(--muted)}.off::before{background:#505a60}
@@ -136,9 +136,11 @@
 <h3>Bestehende Konten und Profile</h3>
 <div class="scenario-actions"><button id="adminRefresh" type="button">Benutzer laden</button><button id="adminNew" type="button">Profil per UID hinzufügen</button></div>
 <label class="gap">Bestehende Profile<select id="adminUsers"></select></label>
+<p class="muted compact">Die Liste zeigt hinterlegte Anzeigenamen und Anmelde-E-Mails. Fehlt beides, erscheint die UID. Bestehende Konten ergänzen ihre E-Mail beim nächsten Öffnen des Trainers.</p>
 <form id="adminForm" class="gap">
 <label class="gap">Firebase-UID<input id="adminUid" required maxlength="128" pattern="[A-Za-z0-9_-]{1,128}" autocomplete="off"></label>
 <label class="gap">Anzeigename <small>(optional)</small><input id="adminName" maxlength="80"></label>
+<p id="adminEmailInfo" class="muted compact" hidden></p>
 <label class="gap">Rolle<select id="adminRole"><option value="participant">Teilnehmer</option><option value="instructor">Instruktor</option></select></label>
 <label><input id="adminActive" type="checkbox" checked> Zugang aktiv</label>
 <button id="adminSave" type="submit">Rechte speichern</button>
@@ -1790,6 +1792,7 @@ async function setupCloud() {
       $('loginForm').hidden = Boolean(user);
       $('accessLogout').hidden = !user;
       if (!user) return;
+      let emailSyncAttempted = false;
       cloud.stopRole = dbApi.onSnapshot(dbApi.doc(cloud.db,'bmaUsers',user.uid), {includeMetadataChanges:true}, snapshot => {
         if (auth.currentUser?.uid !== user.uid) return;
         if (snapshot.metadata.fromCache) return;
@@ -1797,6 +1800,10 @@ async function setupCloud() {
         if (profile?.active !== true || !['instructor','participant'].includes(profile.role)) {
           lockTrainer('Für dieses Konto ist noch keine aktive Rolle hinterlegt.');
           return;
+        }
+        if (!emailSyncAttempted && user.email && profile.email !== user.email) {
+          emailSyncAttempted = true;
+          syncOwnProfileEmail(dbApi,snapshot.ref,user.email);
         }
         const admin = profile.role === 'instructor' && profile.admin === true;
         if (cloud.admin !== admin) setUserAdmin(admin);
@@ -2098,6 +2105,19 @@ $('sharedSmokeToggle').onclick = () => {
   }
 };
 
+async function syncOwnProfileEmail(api, ref, email) {
+  try {
+    await api.updateDoc(ref,{email});
+  } catch {
+    // Identification is optional for operating the trainer.
+  }
+}
+function adminProfileLabel(uid,profile) {
+  const name = profile.name?.trim();
+  const email = profile.email?.trim();
+  const identity = name && email ? name + ' · ' + email : name || email || uid;
+  return identity + (profile.active ? '' : ' · gesperrt');
+}
 let adminProfiles = new Map();
 let adminBusy = false;
 let adminSelection = '';
@@ -2121,14 +2141,20 @@ function loadAdminProfile(uid) {
   $('adminUid').value = uid;
   $('adminUid').readOnly = Boolean(uid);
   $('adminName').value = profile?.name || '';
+  $('adminEmailInfo').hidden = !uid;
+  $('adminEmailInfo').textContent = profile?.email ? 'Anmelde-E-Mail · ' + profile.email :
+    uid ? 'Anmelde-E-Mail wird beim nächsten Öffnen des Trainers übernommen.' : '';
   $('adminRole').value = profile?.role === 'instructor' ? 'instructor' : 'participant';
   $('adminActive').checked = profile ? profile.active === true : true;
   $('adminSave').disabled = adminBusy || profile?.admin === true || uid === cloud.uid;
   adminMessage(profile?.admin === true ? 'Admin-Profile werden in der Firebase-Konsole verwaltet.' : '');
 }
 function appendAdminOption(uid,profile) {
-  const option = new Option((profile.name || uid) + (profile.active ? '' : ' · gesperrt'),uid);
-  $('adminUsers').append(option);
+  const select = $('adminUsers');
+  const existing = Array.from(select.options).find(option => option.value === uid);
+  const label = adminProfileLabel(uid,profile);
+  if (existing) existing.text = label;
+  else select.append(new Option(label,uid));
 }
 async function loadAdminUsers() {
   if (!cloud.admin || adminBusy || accountCreation) return;
@@ -2142,7 +2168,9 @@ async function loadAdminUsers() {
     if (!cloud.admin || uid !== cloud.uid) return;
     adminProfiles = new Map(snapshot.docs.map(doc => [doc.id,doc.data()]));
     $('adminUsers').replaceChildren(new Option('Profil wählen',''));
-    for (const [id,profile] of adminProfiles) appendAdminOption(id,profile);
+    const ordered = [...adminProfiles].sort(([idA,a],[idB,b]) =>
+      adminProfileLabel(idA,a).localeCompare(adminProfileLabel(idB,b),'de'));
+    for (const [id,profile] of ordered) appendAdminOption(id,profile);
     if (adminProfiles.has(adminSelection)) $('adminUsers').value = adminSelection;
     adminMessage(adminProfiles.size + ' Profile geladen.');
   } catch {
@@ -2174,14 +2202,17 @@ $('adminForm').onsubmit = async event => {
   try {
     const api = cloud.dbApi;
     const ref = api.doc(cloud.db,'bmaUsers',id);
-    await api.runTransaction(cloud.db,async tx => {
+    const updated = await api.runTransaction(cloud.db,async tx => {
       const current = await tx.get(ref);
       if (!updating && current.exists()) throw Error('existing-profile');
       if (updating && !current.exists()) throw Error('missing-profile');
       tx.set(ref,profile,{merge:true});
+      return {...current.data(),...profile};
     });
     if (!cloud.admin || uid !== cloud.uid) return;
-    adminProfiles.set(id,profile);
+    adminProfiles.set(id,updated);
+    appendAdminOption(id,updated);
+    $('adminUsers').value = id;
     loadAdminProfile(id);
     adminMessage('Rechte gespeichert. Über „Benutzer laden“ aktualisierst du die Liste.');
   } catch (error) {
@@ -2249,7 +2280,7 @@ async function createTrainingLogin(email,password) {
   try {
     const secondaryAuth = authApi.initializeAuth(secondaryApp,{persistence:authApi.inMemoryPersistence});
     const credential = await authApi.createUserWithEmailAndPassword(secondaryAuth,email,password);
-    return credential.user.uid;
+    return {uid:credential.user.uid,email:credential.user.email || email};
   } finally {
     // The new account's session exists only in this temporary app.
     await appApi.deleteApp(secondaryApp).catch(() => {});
@@ -2277,7 +2308,9 @@ $('adminCreateForm').onsubmit = async event => {
   createAccountMessage('Anmeldekonto wird angelegt …');
   let uid;
   try {
-    uid = await createTrainingLogin(email,password);
+    const account = await createTrainingLogin(email,password);
+    uid = account.uid;
+    profile.email = account.email;
     if (!cloud.admin || cloud.uid !== actor) return;
     const api = cloud.dbApi;
     const ref = api.doc(cloud.db,'bmaUsers',uid);
