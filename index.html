@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BMA-Trainer V15 · Feuerwehr</title>
+<title>BMA-Trainer V15.1 · Feuerwehr</title>
 <style>
 :root{color-scheme:dark;--bg:#101315;--panel:#1b2023;--line:#343c41;--text:#eff2f2;--muted:#aab5bc;--amber:#ffc570;--red:#ff786f;--green:#90e2aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif}main,header>div{max-width:1220px;margin:auto;padding:24px}header{border-bottom:1px solid var(--line);background:#161a1c}header>div,.row,.section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(29px,5vw,44px);letter-spacing:-.05em;line-height:1.05}h2{font-size:19px}h3{font-size:16px}.eyebrow,.label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.eyebrow{color:var(--red);margin-bottom:7px}.tag,.lamp{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:700}.tag{padding:7px 12px;border:1px solid var(--line);border-radius:30px}.lamp::before,.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.off{color:var(--muted)}.off::before{background:#505a60}
@@ -100,6 +100,8 @@
 .sounder-grille{top:12px;height:22px;z-index:2;background:repeating-linear-gradient(99deg,#862e22 0 4px,#351b16 4px 7px,#b04835 7px 9px)}
 .sounder-cap{top:2px;height:19px;z-index:3;background:radial-gradient(ellipse at 43% 20%,#db6e55,#a43c2c 66%,#7e2d23);border:1px solid #ad5142}
 .sounder.is-active .sounder-base{background:linear-gradient(100deg,#9f3124,#e0543c 44%,#b73729)}
+
+.admin-create{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:4px}.admin-create input:not([type=checkbox]){min-width:0;width:100%;padding:9px;background:#171b1e;color:inherit;border:1px solid var(--line);border-radius:6px}#adminCreateStatus:empty{display:none}
 </style>
 </head>
 <body>
@@ -121,8 +123,18 @@
 <details id="userAdmin" class="panel gap" hidden>
 <summary><strong>Benutzerverwaltung</strong></summary>
 <div class="gap admin-body">
-<p class="muted compact">Anmeldekonten legst du in Firebase Authentication an. Hier weist du der UID die Trainerrolle und den Zugang zu.</p>
-<div class="scenario-actions"><button id="adminRefresh" type="button">Benutzer laden</button><button id="adminNew" type="button">Profil hinzufügen</button></div>
+<form id="adminCreateForm" class="gap admin-create">
+<h3>Neues Anmeldekonto</h3>
+<label class="gap">Anzeigename<input id="newUserName" required maxlength="80" autocomplete="off"></label>
+<label class="gap">E-Mail<input id="newUserEmail" required type="email" maxlength="254" autocomplete="off"></label>
+<label class="gap">Startpasswort<input id="newUserPassword" required type="password" minlength="8" maxlength="128" autocomplete="new-password"></label>
+<label class="gap">Rolle<select id="newUserRole"><option value="participant">Teilnehmer</option><option value="instructor">Instruktor</option></select></label>
+<label><input id="newUserActive" type="checkbox" checked> Zugang aktiv</label>
+<button id="adminCreate" type="submit" disabled>Anmeldekonto anlegen</button>
+<p id="adminCreateStatus" class="muted compact" role="status"></p>
+</form>
+<h3>Bestehende Konten und Profile</h3>
+<div class="scenario-actions"><button id="adminRefresh" type="button">Benutzer laden</button><button id="adminNew" type="button">Profil per UID hinzufügen</button></div>
 <label class="gap">Bestehende Profile<select id="adminUsers"></select></label>
 <form id="adminForm" class="gap">
 <label class="gap">Firebase-UID<input id="adminUid" required maxlength="128" pattern="[A-Za-z0-9_-]{1,128}" autocomplete="off"></label>
@@ -1757,6 +1769,7 @@ async function setupCloud() {
     cloud.db = dbApi.getFirestore(app);
     cloud.roomRef = dbApi.doc(cloud.db,'bmaRooms','trainingV13');
     const auth = authApi.getAuth(app);
+    cloud.accountApis = {appApi,authApi,config};
     $('loginButton').disabled = false;
     $('loginForm').onsubmit = async event => {
       event.preventDefault();
@@ -1789,12 +1802,13 @@ async function setupCloud() {
         if (cloud.admin !== admin) setUserAdmin(admin);
         cloud.uid = user.uid;
         cloud.admin = admin;
+        $('roleLabel').textContent = admin ? 'Instruktor · Admin' : profile.role === 'instructor' ? 'Instruktor' : 'Teilnehmer';
+        refreshCreateButton();
         if (cloud.role === profile.role) return;
         disconnectRoom();
         cloud.role = profile.role;
         $('accessPanel').hidden = true;
         $('trainerApp').hidden = false;
-        $('roleLabel').textContent = instructor() ? 'Instruktor' : 'Teilnehmer';
         openShared();
         $('instructorPanel').hidden = !instructor();
         listenToRoom();
@@ -2092,6 +2106,9 @@ function setUserAdmin(enabled) {
   $('userAdmin').hidden = !enabled;
   if (enabled) return;
   $('userAdmin').open = false;
+  resetCreateForm();
+  createAccountMessage('');
+  $('adminCreate').disabled = true;
   adminProfiles.clear();
   $('adminUsers').replaceChildren();
   loadAdminProfile('');
@@ -2109,8 +2126,12 @@ function loadAdminProfile(uid) {
   $('adminSave').disabled = adminBusy || profile?.admin === true || uid === cloud.uid;
   adminMessage(profile?.admin === true ? 'Admin-Profile werden in der Firebase-Konsole verwaltet.' : '');
 }
+function appendAdminOption(uid,profile) {
+  const option = new Option((profile.name || uid) + (profile.active ? '' : ' · gesperrt'),uid);
+  $('adminUsers').append(option);
+}
 async function loadAdminUsers() {
-  if (!cloud.admin || adminBusy) return;
+  if (!cloud.admin || adminBusy || accountCreation) return;
   const uid = cloud.uid;
   adminBusy = true;
   $('adminSave').disabled = true;
@@ -2120,8 +2141,8 @@ async function loadAdminUsers() {
     const snapshot = await api.getDocsFromServer(api.collection(cloud.db,'bmaUsers'));
     if (!cloud.admin || uid !== cloud.uid) return;
     adminProfiles = new Map(snapshot.docs.map(doc => [doc.id,doc.data()]));
-    $('adminUsers').replaceChildren(new Option('Profil wählen',''),...Array.from(adminProfiles, ([id,profile]) =>
-      new Option((profile.name || id) + (profile.active ? '' : ' · gesperrt'),id)));
+    $('adminUsers').replaceChildren(new Option('Profil wählen',''));
+    for (const [id,profile] of adminProfiles) appendAdminOption(id,profile);
     if (adminProfiles.has(adminSelection)) $('adminUsers').value = adminSelection;
     adminMessage(adminProfiles.size + ' Profile geladen.');
   } catch {
@@ -2135,14 +2156,14 @@ async function loadAdminUsers() {
 }
 $('adminRefresh').onclick = loadAdminUsers;
 $('adminNew').onclick = () => {
-  if (adminBusy) return;
+  if (adminBusy || accountCreation) return;
   $('adminUsers').value = '';
   loadAdminProfile('');
 };
-$('adminUsers').onchange = () => { if (!adminBusy) loadAdminProfile($('adminUsers').value); };
+$('adminUsers').onchange = () => { if (!adminBusy && !accountCreation) loadAdminProfile($('adminUsers').value); };
 $('adminForm').onsubmit = async event => {
   event.preventDefault();
-  if (!cloud.admin || adminBusy) return;
+  if (!cloud.admin || adminBusy || accountCreation) return;
   const id = $('adminUid').value.trim();
   const uid = cloud.uid;
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(id) || id === uid || adminProfiles.get(id)?.admin === true) return;
@@ -2208,6 +2229,98 @@ function renderSiren(id,live,muted) {
   $(id+'State').textContent = !live ? 'Akustischer Signalgeber bereit' :
     muted ? 'Akustik abgeschaltet' : 'Räumungsalarm aktiv';
 }
+let accountCreation = null;
+function resetCreateForm() {
+  $('newUserName').value = '';
+  $('newUserEmail').value = '';
+  $('newUserPassword').value = '';
+  $('newUserRole').value = 'participant';
+  $('newUserActive').checked = true;
+}
+function createAccountMessage(text) {
+  $('adminCreateStatus').textContent = text;
+}
+function refreshCreateButton() {
+  $('adminCreate').disabled = !cloud.admin || adminBusy || Boolean(accountCreation);
+}
+async function createTrainingLogin(email,password) {
+  const {appApi,authApi,config} = cloud.accountApis;
+  const secondaryApp = appApi.initializeApp(config,'bma-account-creation');
+  try {
+    const secondaryAuth = authApi.initializeAuth(secondaryApp,{persistence:authApi.inMemoryPersistence});
+    const credential = await authApi.createUserWithEmailAndPassword(secondaryAuth,email,password);
+    return credential.user.uid;
+  } finally {
+    // The new account's session exists only in this temporary app.
+    await appApi.deleteApp(secondaryApp).catch(() => {});
+  }
+}
+
+$('userAdmin').addEventListener('toggle', () => {
+  if ($('userAdmin').open) loadAdminUsers();
+});
+$('adminCreateForm').onsubmit = async event => {
+  event.preventDefault();
+  if (!cloud.admin || adminBusy || accountCreation || !cloud.accountApis) return;
+  const email = $('newUserEmail').value.trim();
+  const password = $('newUserPassword').value;
+  const profile = {name:$('newUserName').value.trim(),role:$('newUserRole').value,active:$('newUserActive').checked};
+  if (!email || password.length < 8 || !profile.name || !['participant','instructor'].includes(profile.role)) {
+    createAccountMessage('Bitte Anzeigename, E-Mail, Startpasswort und Rolle prüfen.');
+    return;
+  }
+  const actor = cloud.uid;
+  const operation = {};
+  accountCreation = operation;
+  refreshCreateButton();
+  $('newUserPassword').value = '';
+  createAccountMessage('Anmeldekonto wird angelegt …');
+  let uid;
+  try {
+    uid = await createTrainingLogin(email,password);
+    if (!cloud.admin || cloud.uid !== actor) return;
+    const api = cloud.dbApi;
+    const ref = api.doc(cloud.db,'bmaUsers',uid);
+    await api.runTransaction(cloud.db,async tx => {
+      if (!cloud.admin || cloud.uid !== actor) throw Error('admin-session-ended');
+      const existing = await tx.get(ref);
+      if (existing.exists()) throw Error('existing-profile');
+      tx.set(ref,profile);
+    });
+    if (!cloud.admin || cloud.uid !== actor) return;
+    resetCreateForm();
+    adminProfiles.set(uid,profile);
+    appendAdminOption(uid,profile);
+    $('adminUsers').value = uid;
+    loadAdminProfile(uid);
+    createAccountMessage(profile.name + ' angelegt · ' +
+      (profile.role === 'instructor' ? 'Instruktor' : 'Teilnehmer') +
+      (profile.active ? ' · Zugang aktiv' : ' · Zugang gesperrt'));
+  } catch (error) {
+    if (!cloud.admin || cloud.uid !== actor) return;
+    if (uid) {
+      $('adminUsers').value = '';
+      loadAdminProfile('');
+      $('adminUid').value = uid;
+      $('adminName').value = profile.name;
+      $('adminRole').value = profile.role;
+      $('adminActive').checked = profile.active;
+      createAccountMessage('Anmeldekonto angelegt. Die Rollenvergabe konnte nicht bestätigt werden. Prüfe zuerst „Benutzer laden“. Falls das Profil fehlt, verwende die unten eingetragene UID und „Rechte speichern“.');
+    } else {
+      const messages = {
+        'auth/email-already-in-use':'Für diese E-Mail existiert schon ein Anmeldekonto. Verwende bei Bedarf dessen UID unter „Profil per UID hinzufügen“.',
+        'auth/weak-password':'Das Startpasswort erfüllt die Projektvorgaben nicht.',
+        'auth/operation-not-allowed':'Die Kontoanlage mit E-Mail und Passwort ist für dieses Firebase-Projekt nicht verfügbar.',
+        'auth/invalid-email':'Die E-Mail-Adresse ist ungültig.'
+      };
+      createAccountMessage(messages[error.code] || 'Anmeldekonto konnte nicht bestätigt werden. Prüfe die Verbindung und die Nutzerliste in Firebase Authentication.');
+    }
+  } finally {
+    if (accountCreation === operation) accountCreation = null;
+    refreshCreateButton();
+  }
+};
+
 render();
 setupCloud();
 </script>
